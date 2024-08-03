@@ -1,0 +1,60 @@
+PROFILING cell_rise_ptp_ol			ps
+
+0.1	"(-inf, 17.7255ps]"	none
+	"(17.7255ps, 150.86ps]"	3 elements
+		TSPC_FF	18.9566	""
+		TG_FF	40.0063	""
+		C2MOS_FF	54.4993	""
+	"(150.86ps, 283.995ps]"	none
+	"(283.995ps, +inf)"	none
+
+3.125	"(-inf, 17.7255ps]"	none
+	"(17.7255ps, 150.86ps]"	3 elements
+		TSPC_FF	33.1781	""
+		TG_FF	53.5367	""
+		C2MOS_FF	69.5067	""
+	"(150.86ps, 283.995ps]"	none
+	"(283.995ps, +inf)"	none
+
+6.25	"(-inf, 17.7255ps]"	none
+	"(17.7255ps, 150.86ps]"	3 elements
+		TSPC_FF	45.6819	""
+		TG_FF	65.9757	""
+		C2MOS_FF	82.0921	""
+	"(150.86ps, 283.995ps]"	none
+	"(283.995ps, +inf)"	none
+
+12.5	"(-inf, 17.7255ps]"	none
+	"(17.7255ps, 150.86ps]"	3 elements
+		TSPC_FF	70.5219	""
+		TG_FF	90.664	""
+		C2MOS_FF	106.918	""
+	"(150.86ps, 283.995ps]"	none
+	"(283.995ps, +inf)"	none
+
+25	"(-inf, 17.7255ps]"	none
+	"(17.7255ps, 150.86ps]"	2 elements
+		TSPC_FF	120.233	""
+		TG_FF	140.059	""
+	"(150.86ps, 283.995ps]"	1 element
+		C2MOS_FF	156.183	""
+	"(283.995ps, +inf)"	none
+
+50	"(-inf, 17.7255ps]"	none
+	"(17.7255ps, 150.86ps]"	none
+	"(150.86ps, 283.995ps]"	3 elements
+		TSPC_FF	219.291	""
+		TG_FF	238.689	""
+		C2MOS_FF	255.016	""
+	"(283.995ps, +inf)"	none
+
+100	"(-inf, 17.7255ps]"	none
+	"(17.7255ps, 150.86ps]"	none
+	"(150.86ps, 283.995ps]"	none
+	"(283.995ps, +inf)"	3 elements
+		TSPC_FF	418.099	""
+		TG_FF	436.292	""
+		C2MOS_FF	452.671	""
+
+Profiling Statistics	Average	150.86
+	Standard Deviation	133.135
