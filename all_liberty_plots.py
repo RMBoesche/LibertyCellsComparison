@@ -141,8 +141,8 @@ def plot_averages_for_vts(average_data):
                 for corner in ['FF', 'TT', 'SS']:
                     if key in luts and vt in luts[key] and corner in luts[key][vt]:
                         y_values.append(luts[key][vt][corner])
-                    else:
-                        y_values.append(float('nan'))
+                    # else:
+                    #     y_values.append(float('nan'))
             
             # Insert np.nan to break the line between different VTs
             y_values_with_nan = []
@@ -150,7 +150,7 @@ def plot_averages_for_vts(average_data):
             for i, y in enumerate(y_values):
                 if i % 3 == 0 and i != 0:  # Add np.nan before starting a new VT section
                     y_values_with_nan.append(np.nan)
-                    x_labels_with_nan.append('')
+                    x_labels_with_nan.append('RVT_FF') # Para nao criar espacos em branco
                 y_values_with_nan.append(y)
                 x_labels_with_nan.append(x_labels[i])
 
