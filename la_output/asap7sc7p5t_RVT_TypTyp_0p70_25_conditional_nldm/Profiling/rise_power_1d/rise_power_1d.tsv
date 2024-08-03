@@ -1,0 +1,60 @@
+PROFILING rise_power_1D			uW/GHz
+
+1	"(-inf, 0.393366uW/GHz]"	1 element
+		TSPC_FF	0.231857	""
+	"(0.393366uW/GHz, 0.813429uW/GHz]"	none
+	"(0.813429uW/GHz, 1.23349uW/GHz]"	2 elements
+		C2MOS_FF	0.999286	""
+		TG_FF	1.20914	""
+	"(1.23349uW/GHz, +inf)"	none
+
+7.8125	"(-inf, 0.393366uW/GHz]"	1 element
+		TSPC_FF	0.231857	""
+	"(0.393366uW/GHz, 0.813429uW/GHz]"	none
+	"(0.813429uW/GHz, 1.23349uW/GHz]"	2 elements
+		C2MOS_FF	0.999286	""
+		TG_FF	1.20914	""
+	"(1.23349uW/GHz, +inf)"	none
+
+15.625	"(-inf, 0.393366uW/GHz]"	1 element
+		TSPC_FF	0.231857	""
+	"(0.393366uW/GHz, 0.813429uW/GHz]"	none
+	"(0.813429uW/GHz, 1.23349uW/GHz]"	2 elements
+		C2MOS_FF	0.999286	""
+		TG_FF	1.20914	""
+	"(1.23349uW/GHz, +inf)"	none
+
+31.25	"(-inf, 0.393366uW/GHz]"	1 element
+		TSPC_FF	0.231857	""
+	"(0.393366uW/GHz, 0.813429uW/GHz]"	none
+	"(0.813429uW/GHz, 1.23349uW/GHz]"	2 elements
+		C2MOS_FF	0.999286	""
+		TG_FF	1.20914	""
+	"(1.23349uW/GHz, +inf)"	none
+
+62.5	"(-inf, 0.393366uW/GHz]"	1 element
+		TSPC_FF	0.231857	""
+	"(0.393366uW/GHz, 0.813429uW/GHz]"	none
+	"(0.813429uW/GHz, 1.23349uW/GHz]"	2 elements
+		C2MOS_FF	0.999286	""
+		TG_FF	1.20914	""
+	"(1.23349uW/GHz, +inf)"	none
+
+125	"(-inf, 0.393366uW/GHz]"	1 element
+		TSPC_FF	0.231857	""
+	"(0.393366uW/GHz, 0.813429uW/GHz]"	none
+	"(0.813429uW/GHz, 1.23349uW/GHz]"	2 elements
+		C2MOS_FF	0.999286	""
+		TG_FF	1.20914	""
+	"(1.23349uW/GHz, +inf)"	none
+
+250	"(-inf, 0.393366uW/GHz]"	1 element
+		TSPC_FF	0.231857	""
+	"(0.393366uW/GHz, 0.813429uW/GHz]"	none
+	"(0.813429uW/GHz, 1.23349uW/GHz]"	2 elements
+		C2MOS_FF	0.999286	""
+		TG_FF	1.20914	""
+	"(1.23349uW/GHz, +inf)"	none
+
+Profiling Statistics	Average	0.813429
+	Standard Deviation	0.420063

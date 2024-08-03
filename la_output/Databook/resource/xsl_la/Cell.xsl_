@@ -1,0 +1,3378 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:xd="http://www.pnp-software.com/XSLTdoc">
+  
+  <xd:doc type="stylesheet">
+    <xd:copyright>&#169; 1984-2024 Silvaco, Inc. All rights reserved.</xd:copyright>
+    <xd:MyProperty>
+      <xd:MyCaption>Copyright Notice:</xd:MyCaption>
+      <xd:MyLine>This document contains confidential and proprietary information.</xd:MyLine>
+      <xd:MyLine>Reproduction or usage of this document, in part or whole, by any means, electrical, mechanical, optical, chemical or otherwise is prohibited, without written permission from Silvaco, Inc.</xd:MyLine>
+      <xd:MyLine>The information contained herein is protected by U.S. and international copyright laws.</xd:MyLine>
+    </xd:MyProperty>
+  </xd:doc>
+  
+  <xsl:include href="NavigationBar.xsl"/>
+  <xsl:include href="TimingTable.xsl"/>
+  
+  <xsl:variable name="useSummary" select="$Config/cell/@genSummary"/>
+  <xsl:variable name="useTruthTable" select="$Config/cell/@genTruthTable"/>
+
+  <xsl:variable name="LegSuffix">
+    <xsl:choose>
+      <xsl:when test="$LibMode = $DevMode or  $LibMode = $GroupedMode"> (relative deviation)</xsl:when> 
+      <xsl:when test="$LibMode = $DevModeAbs"> (absolute deviation)</xsl:when> 
+      <xsl:when test="$LibMode = $DevModeBest"> (best case)</xsl:when> 
+      <xsl:when test="$LibMode = $DevModeWorst"> (worst case)</xsl:when>
+    </xsl:choose>
+  </xsl:variable>
+  
+  <!-- Cell -->
+  <xd:doc>Builds a page in the databook for a single cell. Calls the appropriate templates to build each section of the page</xd:doc>
+  <xsl:template match="Cell">
+
+    <html>
+      <head>
+        <title>
+          <xsl:value-of select="@Name"/>
+        </title>
+
+        <xsl:call-template name="Includes">
+          <xsl:with-param name="dir" select="'..'"/>
+        </xsl:call-template>
+      </head>
+
+      <body onLoad="NanInit();">
+        <a id="PageInfo">
+          <xsl:attribute name="RootPath"><xsl:value-of select="$RootPath"/></xsl:attribute>
+          <xsl:attribute name="CellName"><xsl:value-of select="/*/@Name"/></xsl:attribute>
+          <xsl:attribute name="RefCellName"><xsl:value-of select="/*/@RefCellName"/></xsl:attribute>
+          <xsl:attribute name="TrgCellName"><xsl:value-of select="/*/@TrgCellName"/></xsl:attribute>
+          <xsl:attribute name="RefNode"><xsl:value-of select="$RefNode/@Name"/></xsl:attribute>
+          <xsl:attribute name="TrgNode"><xsl:value-of select="$TrgNode/@Name"/></xsl:attribute>
+          <xsl:attribute name="FileExt"><xsl:value-of select="$Extensions/Cell"/></xsl:attribute>
+          <xsl:attribute name="Focus"><xsl:value-of select="/*/@AnalysisFocus"/></xsl:attribute>
+          <xsl:if test="ref_rel_strength_factor"><xsl:attribute name="RefSF"><xsl:value-of select="normalize-space(translate(ref_rel_strength_factor, '&quot;()', ''))"/></xsl:attribute></xsl:if>
+          <xsl:if test="trg_rel_strength_factor"><xsl:attribute name="TrgSF"><xsl:value-of select="normalize-space(translate(trg_rel_strength_factor, '&quot;()', ''))"/></xsl:attribute></xsl:if>
+        </a>
+
+        <!--Recursive template to split strings (used here to split titles in pdf version) -->
+        <div id="screen-only" name="screen-only">
+          <xsl:call-template name="SilvacoHeader">
+            <xsl:with-param name="dir" select="'..'"/>
+            <xsl:with-param name="Title" select="@Name"/>
+            <xsl:with-param name="break_for_print">false</xsl:with-param>
+          </xsl:call-template>
+        </div>
+
+        <div id="print-only" name="print-only">
+          <H1><xsl:value-of select='/*/@Alias'/>/<xsl:value-of select="@Name"/></H1>
+          <xsl:call-template name="SilvacoHeader">
+            <xsl:with-param name="dir" select="'..'"/>
+            <xsl:with-param name="Title" select="@Name"/>
+            <xsl:with-param name="break_for_print">true</xsl:with-param>
+          </xsl:call-template>
+        </div>
+
+        <!-- Top navigation links -->
+        <div id="screen-only" name="screen-only">
+          <xsl:call-template name="AutoBuildNavigationBar"/>
+          <xsl:call-template name="TitleNotes"/>
+        </div>
+
+        <div id="print-only" name="print-only">
+          <hr/>
+          <!-- copied from template BuildNavigationBar (NavigationBar.xls) BEGIN-->
+          <table class="navigation" width="100%">
+            <colgroup><col/><col/></colgroup>
+            <tr>
+              <td align="left">
+                <p class="copyright">Databook Build Date: <xsl:value-of select="$XmlCornerList/CornerList/Date"/></p>
+              </td>
+              <td align="right">
+                <p class="copyright">Copyright © 1984-2024 Silvaco, Inc. All rights reserved.</p>
+              </td>
+            </tr>
+          </table>
+          <!-- copied from template BuildNavigationBar (NavigationBar.xls) END-->
+        </div>
+
+        <!-- Cell contents - valid for print and screen modes-->
+        <xsl:call-template name="CreateIndex"/>
+
+        <xsl:if test="/*/@ShortMode != 'true'">
+          <div id="screen-only" name="screen-only">
+            <!--template that creates all sections but summary -->
+            <br/><br/><br/><br/><hr/><br/><br/>
+            <xsl:call-template name="CreateSections"/>
+            <!-- Bottom navigation links -->
+            <xsl:call-template name="AutoBuildNavigationBar">
+              <xsl:with-param name="Pos">Bottom</xsl:with-param>
+            </xsl:call-template>
+          </div>
+        </xsl:if>
+        
+      </body>
+    </html>    
+  </xsl:template>
+  
+  
+  <xd:doc>Creates the notes that appear at the title of the page</xd:doc>
+  <xsl:template name="TitleNotes">
+    <p>
+      <xsl:call-template name="CreateTitleCornerNote">
+        <xsl:with-param name="Page"   select="/Cell/@Name"/>
+        <xsl:with-param name="PDFLink" select="/Cell/@Name"/>
+      </xsl:call-template>
+      <br/>
+      <xsl:choose>
+        <xsl:when test="$LibMode=$GroupedMode">
+          Data for comparison between cells 
+          <span class="bold"><xsl:value-of select="Name/@Ref"/></span> (relative sf = 
+          <xsl:value-of select="normalize-space(translate(ref_rel_strength_factor, '&quot;()', ''))"/>) and 
+          <span class="bold"><xsl:value-of select="Name/@Trg"/></span> (relative sf = 
+          <xsl:value-of select="normalize-space(translate(trg_rel_strength_factor, '&quot;()', ''))"/>).
+        </xsl:when>
+        <xsl:otherwise>
+          Data for cell <span class="bold"><xsl:value-of select="@Name"/></span>
+          <xsl:variable name="Name" select="@Name"/>
+          <xsl:variable name="type1">
+            <xsl:value-of select="$XmlLibrary/Library/Cells/CellType/descendant::*[@Name=$Name]/../@Name"/>
+          </xsl:variable>
+          <xsl:variable name="type2">
+            <xsl:value-of select="$XmlLibrary/Library/Cells/CellType/descendant::*[@Name=$Name]/../../@Name"/>
+          </xsl:variable>
+          <xsl:if test="$type1 != '' or $type2 != ''">
+            (<xsl:choose>
+              <xsl:when test="$type1 != ''"><xsl:value-of select="$type1"/></xsl:when>
+              <xsl:otherwise><xsl:value-of select="$type2"/></xsl:otherwise>
+            </xsl:choose>)
+          </xsl:if>
+          .
+        </xsl:otherwise>
+      </xsl:choose>
+
+      Eventual numbers in <i>italic</i> show that the values have required interpolations due to internal data manipulation and/or non-matching LUT index templates.
+      
+      <xsl:if test="$LibMode=$GroupedMode or $LibMode=$DevMode">
+        <br/>Deviation filters: constraint (<xsl:value-of select="/Cell/Filters/@Constraint"/>), 
+        dynamic power (<xsl:value-of select="/Cell/Filters/@DynamicPower"/>), 
+        input pin power (<xsl:value-of select="/Cell/Filters/@HiddenPower"/>), 
+        smooth filter (<xsl:value-of select="/Cell/Filters/@SmoothFilter"/>), 
+        receiver capacitance filter (<xsl:value-of select="/Cell/Filters/@RecCapFilter"/>), 
+        logarithmic filter (<xsl:value-of select="/Cell/Filters/@DevFilter"/>
+        <xsl:if test="/Cell/Filters/@DevFilter='yes'">; value = <xsl:value-of select="/Cell/Filters/@DevFilterValue"/></xsl:if>)<br/>
+      </xsl:if>
+      
+      See <a href="#Notes">notes</a> for additional information.
+      
+    </p>
+  </xsl:template>
+
+
+  <!-- Create Index -->
+  <xd:doc>Creates a small index at the beginning of the page, to grant quick access to each of its sections</xd:doc>
+  <xsl:template name="CreateIndex">
+    <xsl:if test="$useSummary='yes'">
+      <div id="screen-only" name="screen-only">
+        <a name="Summary">
+          <xsl:call-template name="CreateCollapse">
+            <xsl:with-param name="name">Summary</xsl:with-param>
+            <xsl:with-param name="dir">..</xsl:with-param>
+          </xsl:call-template>
+          <ul id="_Summary">
+            <xsl:call-template name="CreateSections"><xsl:with-param name="short">true</xsl:with-param></xsl:call-template>
+          </ul>
+        </a>
+      </div>
+
+      <div id="print-only" name="print-only">
+        <xsl:call-template name="Notes"><xsl:with-param name="short">true</xsl:with-param></xsl:call-template>
+        <xsl:call-template name="CreateSections"><xsl:with-param name="short">true</xsl:with-param></xsl:call-template>
+      </div>
+    </xsl:if>
+  </xsl:template>
+
+
+  <!-- Cell page sections -->
+  <xd:doc>Calls the functions that create the sections (both for summary and contents)</xd:doc>
+  <xsl:template name="CreateSections">
+    <xsl:param name="short">false</xsl:param>
+    
+    <xsl:if test="$short='true'">
+      <xsl:call-template name="CellChars">   <xsl:with-param name="short" select="$short"/></xsl:call-template>
+    </xsl:if>
+    <xsl:call-template name="Schematic">   <xsl:with-param name="short" select="$short"/></xsl:call-template>
+    <xsl:call-template name="Capacitance"> <xsl:with-param name="short" select="$short"/></xsl:call-template>
+    <xsl:call-template name="CsVsNldm">    <xsl:with-param name="short" select="$short"/></xsl:call-template>
+    <xsl:call-template name="Timing">      <xsl:with-param name="short" select="$short"/></xsl:call-template>
+    <xsl:call-template name="ConstrValid"> <xsl:with-param name="short" select="$short"/></xsl:call-template>
+    <xsl:call-template name="Constraints"> <xsl:with-param name="short" select="$short"/></xsl:call-template>
+    <div id="print-only" name="print-only">
+      <xsl:if test="$short='true'">
+        <xsl:call-template name="PDFArcRedTables"/>
+      </xsl:if>
+    </div>
+    <xsl:call-template name="Power">       <xsl:with-param name="short" select="$short"/></xsl:call-template>
+
+    <xsl:if test="CharEnvTable">      
+      <xsl:call-template name="CharEnv">     <xsl:with-param name="short" select="$short"/></xsl:call-template>
+    </xsl:if>
+
+    <div id="screen-only" name="screen-only">
+      <xsl:if test="$short='true'">
+        <xsl:call-template name="Notes"><xsl:with-param name="short" select="$short"/></xsl:call-template>
+      </xsl:if>          
+    </div>
+  </xsl:template>
+  
+  
+  <!-- Cell Characteristics -->
+  <xd:doc>Creates the General Cell Characteristics table</xd:doc>
+  <xsl:template name="CellChars">
+    <xsl:param name="short">false</xsl:param>
+
+    <xsl:variable name="address">CellChars</xsl:variable>
+    <xsl:variable name="GenChars" select="/*/GenChars"/>
+    <xsl:variable name="Table" select="'CellChars'"/>
+    <xsl:variable name="num_pins">
+      <xsl:value-of select="count(StateTable/Table/Header/El)"/>
+    </xsl:variable>
+    <a>
+      <xsl:attribute name="name"><xsl:if test="$short='true'">s</xsl:if><xsl:value-of select="$address"/></xsl:attribute>
+      
+      <div id="screen-only" name="screen-only">
+        <xsl:call-template name="CreateCollapse">
+          <xsl:with-param name="name">General Cell Characteristics</xsl:with-param>
+          <xsl:with-param name="tag" select="$address"/>
+          <xsl:with-param name="short" select="$short"/>
+          <xsl:with-param name="dir">..</xsl:with-param>
+        </xsl:call-template>
+      </div>
+      
+      <span>
+        <xsl:attribute name="id">_<xsl:value-of select="$address"/></xsl:attribute>
+        <table class="reduced">
+          <tr>
+            <td>
+              <table border="1" style="margin-left:0">
+                <colgroup><col/><col/></colgroup>
+                
+                <tbody>
+                  <xsl:call-template name="CreateCellCharsUnitAtt">
+                    <xsl:with-param name="node"      select="$GenChars/Desc"/>
+                    <xsl:with-param name="name"      select="'Description'"/>
+                    <xsl:with-param name="Table"     select="$Table"/>
+                    <xsl:with-param name="node_name" select="concat(name($GenChars), '/Desc')"/>
+                  </xsl:call-template>
+                  
+                  <xsl:if test="($LibMode != $GroupedMode)">
+                    <xsl:call-template name="CreateCellCharsUnitAtt">
+                      <xsl:with-param name="node"      select="$GenChars/Strength"/>
+                      <xsl:with-param name="name"      select="'Strength'"/>
+                      <xsl:with-param name="Table"     select="$Table"/>
+                      <xsl:with-param name="node_name" select="concat(name($GenChars), '/Strength')"/>
+                    </xsl:call-template>
+                  </xsl:if>
+                  
+                  <xsl:if test="area">
+                    <tr>
+                      <th>Cell Area</th>
+                      <td>
+                        <xsl:choose>
+                          <xsl:when test="$LibMode = $DevMode or  $LibMode = $GroupedMode">
+                            <xsl:value-of select="format-number(area, '0.000')"/> %
+                          </xsl:when>
+                          <xsl:otherwise>
+                            <xsl:value-of select="format-number(area, '0.000')"/> um<sup>2</sup>
+                          </xsl:otherwise>
+                        </xsl:choose> 
+                      </td>
+                    </tr>
+                  </xsl:if>
+
+                  <xsl:if test="$GenChars/Equation">
+                    <tr>
+                      <th><xsl:value-of select="'Equation'"/></th>
+                      <td>
+                        <div id="screen-only" name="screen-only">
+                          <xsl:for-each select="$GenChars/Equation">
+                            <xsl:value-of select="."/>
+                            <xsl:if test="position()!=last()"><br/></xsl:if>
+                          </xsl:for-each>
+                        </div>                    
+                        <div id="print-only" name="print-only">
+                          <xsl:for-each select="$GenChars/Equation">
+                            <xsl:call-template name="SplitString">
+                              <xsl:with-param name="string" select="."/>
+                              <xsl:with-param name="max_size" select="'30'"/>
+                              <xsl:with-param name="lin_pos" select="'0'"/>
+                              <xsl:with-param name="separator" select="'+'"/>
+                            </xsl:call-template>
+                            <xsl:if test="position()!=last()"><br/></xsl:if>
+                          </xsl:for-each>
+                        </div>                    
+                      </td>
+                    </tr>
+                  </xsl:if>
+
+                  <xsl:call-template name="CreateCellCharsUnitAtt">
+                    <xsl:with-param name="node"      select="$GenChars/Observability"/>
+                    <xsl:with-param name="name"      select="'Observability'"/>
+                    <xsl:with-param name="Table"     select="$Table"/>
+                    <xsl:with-param name="node_name" select="concat(name($GenChars), '/Observability')"/>
+                  </xsl:call-template>
+                  
+                  <xsl:call-template name="CreateCellCharsMultiAtt">
+                    <xsl:with-param name="node"      select="$GenChars/Enable"/>
+                    <xsl:with-param name="name"      select="'Enable'"/>
+                    <xsl:with-param name="Table"     select="$Table"/>
+                    <xsl:with-param name="node_name" select="concat(name($GenChars), '/Enable')"/>
+                  </xsl:call-template>
+                  
+                  <xsl:call-template name="CreateCellCharsUnitAtt">
+                    <xsl:with-param name="node"      select="$GenChars/Clock"/>
+                    <xsl:with-param name="name"      select="'Clock'"/>
+                    <xsl:with-param name="Table"     select="$Table"/>
+                    <xsl:with-param name="node_name" select="concat(name($GenChars), '/Clock')"/>
+                  </xsl:call-template>
+                  
+                  <xsl:call-template name="CreateCellCharsUnitAtt">
+                    <xsl:with-param name="node"      select="$GenChars/SlaveClock"/>
+                    <xsl:with-param name="name"      select="'Slave Clock'"/>
+                    <xsl:with-param name="Table"     select="$Table"/>
+                    <xsl:with-param name="node_name" select="concat(name($GenChars), '/SlaveClock')"/>
+                  </xsl:call-template>
+                  
+                  <xsl:call-template name="CreateCellCharsMultiAtt">
+                    <xsl:with-param name="node"      select="$GenChars/Reset"/>
+                    <xsl:with-param name="name"      select="'Reset'"/>
+                    <xsl:with-param name="Table"     select="$Table"/>
+                    <xsl:with-param name="node_name" select="concat(name($GenChars), '/Reset')"/>
+                  </xsl:call-template>
+                  
+                  <xsl:call-template name="CreateCellCharsMultiAtt">
+                    <xsl:with-param name="node"      select="$GenChars/Preset"/>
+                    <xsl:with-param name="name"      select="'Set'"/>
+                    <xsl:with-param name="Table"     select="$Table"/>
+                    <xsl:with-param name="node_name" select="concat(name($GenChars), '/Preset')"/>
+                  </xsl:call-template>
+                  
+                  <xsl:call-template name="CreateCellCharsUnitAtt">
+                    <xsl:with-param name="node"      select="$GenChars/SensType"/>
+                    <xsl:with-param name="name"      select="'Sensibility'"/>
+                    <xsl:with-param name="Table"     select="$Table"/>
+                    <xsl:with-param name="node_name" select="concat(name($GenChars), '/SensType')"/>
+                  </xsl:call-template>
+                  
+                  <xsl:call-template name="CreateCellCharsUnitAtt">
+                    <xsl:with-param name="node"      select="$GenChars/Type"/>
+                    <xsl:with-param name="name"      select="'Type'"/>
+                    <xsl:with-param name="Table"     select="$Table"/>
+                    <xsl:with-param name="node_name" select="concat(name($GenChars), '/Type')"/>
+                  </xsl:call-template>
+                  
+                  <xsl:call-template name="CreateCellCharsUnitAtt">
+                    <xsl:with-param name="node"      select="$GenChars/ScanEnable"/>
+                    <xsl:with-param name="name"      select="'Scan Enable'"/>
+                    <xsl:with-param name="Table"     select="$Table"/>
+                    <xsl:with-param name="node_name" select="concat(name($GenChars), '/ScanEnable')"/>
+                  </xsl:call-template>
+                  
+                  <xsl:call-template name="CreateCellCharsUnitAtt">
+                    <xsl:with-param name="node"      select="$GenChars/ScanData"/>
+                    <xsl:with-param name="name"      select="'Scan Data'"/>
+                    <xsl:with-param name="Table"     select="$Table"/>
+                    <xsl:with-param name="node_name" select="concat(name($GenChars), '/ScanData')"/>
+                  </xsl:call-template>
+                  
+                  <xsl:call-template name="CreateCellCharsMultiAtt">
+                    <xsl:with-param name="node"      select="$GenChars/Input"/>
+                    <xsl:with-param name="name"      select="'Input'"/>
+                    <xsl:with-param name="Table"     select="$Table"/>
+                    <xsl:with-param name="node_name" select="concat(name($GenChars), '/Input')"/>
+                  </xsl:call-template>                  
+
+                  <xsl:call-template name="CreateCellCharsMultiAtt">
+                    <xsl:with-param name="node"      select="$GenChars/Inout"/>
+                    <xsl:with-param name="name"      select="'InOut'"/>
+                    <xsl:with-param name="Table"     select="$Table"/>
+                    <xsl:with-param name="node_name" select="concat(name($GenChars), '/Inout')"/>
+                  </xsl:call-template>
+
+                  <xsl:call-template name="CreateCellCharsMultiAtt">
+                    <xsl:with-param name="node"      select="$GenChars/Output"/>
+                    <xsl:with-param name="name"      select="'Output'"/>
+                    <xsl:with-param name="Table"     select="$Table"/>
+                    <xsl:with-param name="node_name" select="concat(name($GenChars), '/Output')"/>
+                  </xsl:call-template>
+                  
+                  <xsl:call-template name="CreateCellCharsMultiAtt">
+                    <xsl:with-param name="node"      select="$GenChars/Internal"/>
+                    <xsl:with-param name="name"      select="'Internal'"/>
+                    <xsl:with-param name="Table"     select="$Table"/>
+                    <xsl:with-param name="node_name" select="concat(name($GenChars), '/Internal')"/>
+                  </xsl:call-template>
+
+                  <xsl:call-template name="CreateCellCharsMultiAtt">
+                    <xsl:with-param name="node"      select="$GenChars/PgPin"/>
+                    <xsl:with-param name="name"      select="'PG Pins'"/>
+                    <xsl:with-param name="Table"     select="$Table"/>
+                    <xsl:with-param name="node_name" select="concat(name($GenChars), '/PgPin')"/>
+                  </xsl:call-template>
+                  
+                </tbody>
+              </table>
+            </td>
+            <td/>
+
+            <td>
+              <xsl:variable name="schemLink">
+                <xsl:choose>
+                  <xsl:when test="Schematic/text()">y</xsl:when>
+                  <xsl:otherwise>n</xsl:otherwise>
+                </xsl:choose>
+              </xsl:variable>
+              <xsl:if test="Symbol/text()">
+                <a class="Summary">
+                  <xsl:if test="$schemLink='y'">
+                    <xsl:attribute name="href">#Schematic</xsl:attribute>
+                  </xsl:if>
+                  <img border="0">
+                    <xsl:attribute name="src">
+                      <xsl:if test="$DocType='PDF'">@../../Cells/</xsl:if>
+                      <xsl:value-of select="Symbol"/>
+                    </xsl:attribute>
+                    <xsl:attribute name="alt">Symbol image not found.</xsl:attribute>
+                  </img>
+                </a>
+              </xsl:if>
+            </td>
+            <td/>
+
+            <xsl:if test="StateTable">
+              <td>
+                <xsl:for-each select="StateTable/Table">
+                  <table border="1" style="margin-left:0" class="reduced">
+                    <xsl:variable name="numCols">
+                      <xsl:value-of select="count(Header/El)"/>
+                    </xsl:variable>
+                    <tr>
+                      <th class="reduced_title">
+                        <xsl:attribute name="colspan">
+                          <xsl:value-of select="$numCols"/>
+                        </xsl:attribute>
+                        State Table
+                      </th>
+                    </tr>
+                    <xsl:for-each select="Header">
+                      <tr><xsl:for-each select="El"><th width="30"><xsl:value-of select="@Value"/><xsl:if test="@Sub"><sub><xsl:value-of select="@Sub"/></sub></xsl:if></th></xsl:for-each></tr>
+                    </xsl:for-each>
+                    <xsl:for-each select="Line">
+                      <tr align="center"><xsl:for-each select="El"><td><xsl:value-of select="@Value"/></td></xsl:for-each></tr>
+                    </xsl:for-each>
+                  </table>
+                </xsl:for-each>
+              </td>
+            </xsl:if>
+          </tr>
+        </table>
+      </span>
+    </a>    
+  </xsl:template>
+  
+
+  <xd:doc>
+    Used by the CellChar template to create a composed entry in the General Cell Characteristics table
+    <xd:param name="node" type="element">contains the set of nodes that should compose the entry</xd:param>
+    <xd:param name="name" type="string">entry's name</xd:param>
+    <xd:param name="node_name" type="string">
+      <xd:short>used to identify the entry inside the table</xd:short>
+      <xd:detail>Default value is a copy of <i>name</i></xd:detail>
+    </xd:param>
+    <xd:param name="Table" type="string">identifier for the table where the entry is being inserted</xd:param>
+  </xd:doc>
+  <xsl:template name="CreateCellCharsMultiAtt">
+    <xsl:param name="node"/>
+    <xsl:param name="name"/>
+    <xsl:param name="node_name" select="$name"/>
+    <xsl:param name="Table"/>
+    
+    <xsl:if test="$node">
+      <tr>
+        <th><xsl:value-of select="$name"/></th>
+        <td>
+          <xsl:for-each select="$node">
+            <xsl:value-of select="."/>
+            <xsl:if test="position()!=last()">, </xsl:if>
+          </xsl:for-each>
+        </td>
+      </tr>
+    </xsl:if>
+  </xsl:template>
+  
+  
+  <xd:doc>
+    Used by the CellChar template to create an atomic entry in the General Cell Characteristics table
+    <xd:param name="node" type="element">contains the nodes whose value should compose the entry</xd:param>
+    <xd:param name="name" type="string">entry's name</xd:param>
+    <xd:param name="node_name" type="string">
+      <xd:short>used to identify the entry inside the table</xd:short>
+      <xd:detail>Default value is a copy of <i>name</i></xd:detail>
+    </xd:param>
+    <xd:param name="Table" type="string">identifier for the table where the entry is being inserted</xd:param>
+  </xd:doc>
+  <xsl:template name="CreateCellCharsUnitAtt">
+    <xsl:param name="node"/>
+    <xsl:param name="name"/>
+    <xsl:param name="node_name" select="$name"/>
+    <xsl:param name="Table"/>
+    
+    <xsl:if test="$node">
+      <tr>
+        <th><xsl:value-of select="$name"/></th>
+        <td>
+          <xsl:value-of select="$node"/>
+        </td>
+      </tr>
+    </xsl:if>
+  </xsl:template>
+  
+  
+  <!-- Cell Layout -->
+  <xd:doc>Shows an image with the layout of the cell. Not yet available in the XML files</xd:doc>
+  <xsl:template name="Schematic">
+    <xsl:param name="short">false</xsl:param>
+    <xsl:if test="Schematic">
+      <xsl:variable name="address">Schematic</xsl:variable>
+      <a>
+        <xsl:attribute name="name"><xsl:if test="$short='true'">s</xsl:if><xsl:value-of select="$address"/></xsl:attribute>
+
+        <div id="screen-only" name="screen-only">
+          <xsl:call-template name="CreateCollapse">
+            <xsl:with-param name="name" select="$address"/>
+            <xsl:with-param name="tag" select="$address"/>
+            <xsl:with-param name="short" select="$short"/>
+            <xsl:with-param name="dir">..</xsl:with-param>
+          </xsl:call-template>
+        </div>
+
+        <xsl:if test="$short='false'">
+          <span>
+            <xsl:attribute name="id">_<xsl:value-of select="$address"/></xsl:attribute>
+            <hr class="Title"/>
+            <div>
+              <xsl:choose>
+                <xsl:when test="Schematic/text()">
+                  <img>
+                    <xsl:attribute name="src">
+                      <xsl:if test="$DocType='PDF'">@../../Cells/</xsl:if>
+                      <xsl:value-of select="Schematic"/>
+                    </xsl:attribute>
+                    <xsl:attribute name="alt">Schematic image not found.</xsl:attribute>
+                  </img>
+                </xsl:when>
+                <xsl:otherwise>Schematic representation not available.</xsl:otherwise>
+              </xsl:choose>
+            </div>
+          </span>
+        </xsl:if>
+      </a>
+    </xsl:if>
+  </xsl:template>
+
+
+  <!-- Capacitance -->
+  <xd:doc>Builds the capacitance information</xd:doc>
+  <xsl:template name="Capacitance">
+    <xsl:param name="short">false</xsl:param>
+    <xsl:if test="Pins/Pin[capacitance|max_cap_em|
+                  receiver_capacitance1_fall|receiver_capacitance1_rise|
+                  receiver_capacitance2_fall|receiver_capacitance2_rise] or
+                  Pins/Pin/EcsmCapList/EcsmCapEntry[ecsm_capacitance] or
+                  Pins/Pin/TimingList/TimingEntry[receiver_capacitance1_fall|receiver_capacitance1_rise|
+                  receiver_capacitance2_fall|receiver_capacitance2_rise]">
+      <xsl:variable name="address">Capacitance</xsl:variable>
+      <a>
+        <xsl:attribute name="name"><xsl:if test="$short='true'">s</xsl:if><xsl:value-of select="$address"/></xsl:attribute>
+
+        <div id="screen-only" name="screen-only">
+          <xsl:call-template name="CreateCollapse">
+            <xsl:with-param name="name" select="$address"/>
+            <xsl:with-param name="tag" select="$address"/>
+            <xsl:with-param name="short" select="$short"/>
+            <xsl:with-param name="dir">..</xsl:with-param>
+          </xsl:call-template>
+
+          <xsl:if test="Pins/Pin/capacitance and $short='true'">
+            <xsl:call-template name="PrintArcRedTable">
+              <xsl:with-param name="arcRedNode"   select="./Pins"/>
+              <xsl:with-param name="type"         select="'cap'"/>
+            </xsl:call-template>
+          </xsl:if>
+        </div>
+        <xsl:if test="/*/@ShortMode != 'true'">
+          <span>
+            <xsl:attribute name="id"><xsl:if test="$short='true'">s</xsl:if>_<xsl:value-of select="$address"/></xsl:attribute>
+            <table class="sessionSplit">
+              <tr>
+                <td>
+                  <xsl:call-template name="GateCapacitance">     <xsl:with-param name="pTag" select="$address"/><xsl:with-param name="short" select="$short"/></xsl:call-template>
+                </td>
+              </tr>
+              <tr>
+                <td>
+              <xsl:call-template name="MaxCapacitance">      <xsl:with-param name="pTag" select="$address"/><xsl:with-param name="short" select="$short"/></xsl:call-template>
+                </td>
+              </tr>
+              <tr>
+                <td>
+              <xsl:call-template name="ReceiverCapacitance"> <xsl:with-param name="pTag" select="$address"/><xsl:with-param name="short" select="$short"/></xsl:call-template>
+                </td>
+              </tr>
+              <tr>
+                <td>
+              <xsl:call-template name="EcsmCapacitance">     <xsl:with-param name="pTag" select="$address"/><xsl:with-param name="short" select="$short"/></xsl:call-template>
+                </td>
+              </tr>
+            </table>
+          </span>
+        </xsl:if>
+      </a>
+    </xsl:if>
+  </xsl:template>
+  
+  <!-- Gate Capacitance -->
+  <xd:doc>Builds the gate capacitance information</xd:doc>
+  <xsl:template name="GateCapacitance">
+    <xsl:param name="pTag"/>
+    <xsl:param name="short">false</xsl:param>
+
+    <xsl:if test="Pins/Pin/capacitance">
+      <xsl:variable name="address">GateCapacitance</xsl:variable>
+      <xsl:variable name="SecId" select="'CAP'"/>
+      <xsl:variable name="Legend">
+        <xsl:call-template name="Map">
+          <xsl:with-param name="key" select="concat($SecId, '_Legend')"/>
+        </xsl:call-template>
+      </xsl:variable>
+
+      <a>
+        <xsl:attribute name="name"><xsl:if test="$short='true'">s</xsl:if><xsl:value-of select="$address"/></xsl:attribute>
+
+        <div id="screen-only" name="screen-only">
+          <xsl:call-template name="CreateCollapse">
+            <xsl:with-param name="name">NLDM Capacitance</xsl:with-param>
+            <xsl:with-param name="tag" select="$address"/>
+            <xsl:with-param name="parentTag" select="$pTag"/>
+            <xsl:with-param name="short" select="$short"/>
+            <xsl:with-param name="dir">..</xsl:with-param>
+            <xsl:with-param name="legend" select="concat($Legend, $LegSuffix)"/>
+          </xsl:call-template>
+        </div>
+
+        <xsl:if test="$short='false'">
+          <span hide="false">
+            <xsl:attribute name="id">_<xsl:value-of select="$address"/></xsl:attribute>
+            <xsl:if test="$XmlLibrary/Library/CapSummary/Entry[@Name='CAP'] or $LibMode != 'normal'">
+              <table><tr><td>
+                <xsl:if test="$XmlLibrary/Library/CapSummary/Entry[@Name='CAP']">
+                  <xsl:variable name="SecTag">
+                    <xsl:call-template name="Map">
+                      <xsl:with-param name="key" select="'CAP_Tag'"/>
+                    </xsl:call-template>
+                  </xsl:variable>
+                  <xsl:variable name="SecTitle">
+                    <xsl:call-template name="Map">
+                      <xsl:with-param name="key" select="'CAP_Title'"/>
+                    </xsl:call-template>
+                  </xsl:variable>
+                  <a>
+                    <xsl:attribute name="href">
+                      <xsl:value-of select="concat('../', $SecTag,'_', /Cell/@CornerName, $Extensions/Summary)"/>
+                    </xsl:attribute>
+                    <xsl:value-of select="$SecTitle"/> for All Cells
+                  </a>
+                </xsl:if>
+                <xsl:if test="$XmlLibrary/Library/CapSummary/Entry[@Name='CAP'] and $LibMode != 'normal'">
+                  <xsl:text>&#160;&#160;|&#160;&#160;</xsl:text>
+                </xsl:if>
+                <xsl:if test="$LibMode != 'normal'">
+                  <xsl:call-template name="CreateRefTrg">
+                    <xsl:with-param name="address1" select="concat('#', $address)"/>
+                    <xsl:with-param name="address2" select="concat('#', $address)"/>
+                  </xsl:call-template>
+                </xsl:if>
+              </td></tr></table>
+            </xsl:if>
+            <xsl:variable name="extendedTable">
+              <xsl:choose>
+                <xsl:when test="Pins/Pin/fall_capacitance_range | Pins/Pin/rise_capacitance_range">y</xsl:when>
+                <xsl:otherwise>n</xsl:otherwise>
+              </xsl:choose>
+            </xsl:variable>
+
+            <div>
+              <xsl:attribute name="ngTable">capGr</xsl:attribute>
+              <xsl:attribute name="capGr">nldm</xsl:attribute>
+              <xsl:attribute name="ext"><xsl:value-of select="$extendedTable"/></xsl:attribute>
+              <xsl:attribute name="unit"><xsl:value-of select="$capLabel"/></xsl:attribute>
+              <xsl:variable name="entries">
+                <xsl:for-each select="Pins/Pin/capacitance">
+                  <xsl:variable name="pinName" select="normalize-space(translate(../Name, '&quot;', ''))"/>
+                  <xsl:variable name="inputCap">
+                    <xsl:call-template name="FormatUnit">
+                      <xsl:with-param name="value" select="current()"/>
+                      <xsl:with-param name="pattern" select="'0.0000'"/>
+                    </xsl:call-template><xsl:if test="@tolExceeded='down'">d</xsl:if><xsl:if test="@tolExceeded='up'">u</xsl:if>
+                  </xsl:variable>
+                  <xsl:variable name="extCap">
+                    <xsl:choose>
+                      <xsl:when test="$extendedTable='y'">
+                        <xsl:choose>
+                          <xsl:when test="../fall_capacitance">
+                            <xsl:call-template name="FormatUnit">
+                              <xsl:with-param name="value" select="../fall_capacitance"/>
+                              <xsl:with-param name="pattern" select="'0.0000'"/>
+                            </xsl:call-template>
+                            <xsl:if test="../fall_capacitance/@tolExceeded='down'">d</xsl:if><xsl:if test="../fall_capacitance/@tolExceeded='up'">u</xsl:if>
+                          </xsl:when>
+                          <xsl:otherwise>-</xsl:otherwise>
+                        </xsl:choose>;
+                        <xsl:choose>
+                          <xsl:when test="../fall_capacitance_range/fall_capacitance_range_min">
+                            <xsl:call-template name="FormatUnit">
+                              <xsl:with-param name="value" select="../fall_capacitance_range/fall_capacitance_range_min"/>
+                              <xsl:with-param name="pattern" select="'0.0000'"/>
+                            </xsl:call-template>
+                            <xsl:if test="../fall_capacitance_range/fall_capacitance_range_min/@tolExceeded='down'">d</xsl:if><xsl:if test="../fall_capacitance_range/fall_capacitance_range_min/@tolExceeded='up'">u</xsl:if>
+                          </xsl:when>
+                          <xsl:otherwise>-</xsl:otherwise>
+                        </xsl:choose>;
+                        <xsl:choose>
+                          <xsl:when test="../fall_capacitance_range/fall_capacitance_range_max">
+                            <xsl:call-template name="FormatUnit">
+                              <xsl:with-param name="value" select="../fall_capacitance_range/fall_capacitance_range_max"/>
+                              <xsl:with-param name="pattern" select="'0.0000'"/>
+                            </xsl:call-template>
+                            <xsl:if test="../fall_capacitance_range/fall_capacitance_range_max/@tolExceeded='down'">d</xsl:if><xsl:if test="../fall_capacitance_range/fall_capacitance_range_max/@tolExceeded='up'">u</xsl:if>
+                          </xsl:when>
+                          <xsl:otherwise>-</xsl:otherwise>
+                        </xsl:choose>;
+                        <xsl:choose>
+                          <xsl:when test="../rise_capacitance">
+                            <xsl:call-template name="FormatUnit">
+                              <xsl:with-param name="value" select="../rise_capacitance"/>
+                              <xsl:with-param name="pattern" select="'0.0000'"/>
+                            </xsl:call-template>
+                            <xsl:if test="../rise_capacitance/@tolExceeded='down'">d</xsl:if><xsl:if test="../rise_capacitance/@tolExceeded='up'">u</xsl:if>
+                          </xsl:when>
+                          <xsl:otherwise>-</xsl:otherwise>
+                        </xsl:choose>;
+                        <xsl:choose>
+                          <xsl:when test="../rise_capacitance_range/rise_capacitance_range_min">
+                            <xsl:call-template name="FormatUnit">
+                              <xsl:with-param name="value" select="../rise_capacitance_range/rise_capacitance_range_min"/>
+                              <xsl:with-param name="pattern" select="'0.0000'"/>
+                            </xsl:call-template>
+                            <xsl:if test="../rise_capacitance_range/rise_capacitance_range_min/@tolExceeded='down'">d</xsl:if><xsl:if test="../rise_capacitance_range/rise_capacitance_range_min/@tolExceeded='up'">u</xsl:if>
+                          </xsl:when>
+                          <xsl:otherwise>-</xsl:otherwise>
+                        </xsl:choose>;
+                        <xsl:choose>
+                          <xsl:when test="../rise_capacitance_range/rise_capacitance_range_max">
+                            <xsl:call-template name="FormatUnit">
+                              <xsl:with-param name="value" select="../rise_capacitance_range/rise_capacitance_range_max"/>
+                              <xsl:with-param name="pattern" select="'0.0000'"/>
+                            </xsl:call-template>
+                            <xsl:if test="../rise_capacitance_range/rise_capacitance_range_max/@tolExceeded='down'">d</xsl:if><xsl:if test="../rise_capacitance_range/rise_capacitance_range_max/@tolExceeded='up'">u</xsl:if>
+                          </xsl:when>
+                          <xsl:otherwise>-</xsl:otherwise>
+                        </xsl:choose>;
+                      </xsl:when>
+                    </xsl:choose>
+                  </xsl:variable>
+                  <xsl:value-of select="translate(normalize-space(concat($pinName,';',$inputCap,';',$extCap,'$')), ' ', '')"/>
+                </xsl:for-each>
+              </xsl:variable>
+              <xsl:attribute name="entries"><xsl:value-of select="$entries"/></xsl:attribute>
+            </div>
+          </span>
+        </xsl:if> 
+      </a>
+    </xsl:if>
+  </xsl:template>
+
+
+  <!-- Max Capacitance -->
+  <xd:doc>Builds the max capacitance information</xd:doc>
+  <xsl:template name="MaxCapacitance">
+    <xsl:param name="pTag"/>
+    <xsl:param name="short">false</xsl:param>
+    
+    <xsl:if test="Pins/Pin/max_capacitance">
+      <xsl:variable name="maxCurr"><xsl:value-of select="max_curr_at_rail"/></xsl:variable>
+      <xsl:variable name="tgtFreq"><xsl:value-of select="target_frequency"/></xsl:variable>
+      <xsl:variable name="minFo"><xsl:value-of select="min_fanout"/></xsl:variable>     
+      <xsl:variable name="extra">
+        <xsl:if test="$maxCurr != ''">
+          <xsl:value-of select="concat('target frequency = ', format-number($tgtFreq, '0.###'), 'GHz, maximum current = ', format-number($maxCurr, '0.#####'), 'mA')"/>
+        </xsl:if>
+        <xsl:if test="$maxCurr != '' and min_fanout">, </xsl:if>
+        <xsl:if test="min_fanout">
+          <xsl:value-of select="concat('minimum fanout = ', format-number($minFo, '0'))"/>
+        </xsl:if>
+      </xsl:variable>
+      <xsl:variable name="address">MaxCapacitance</xsl:variable>
+      <xsl:variable name="SecId" select="'MXC'"/>
+      <xsl:variable name="Legend">
+        <xsl:call-template name="Map">
+          <xsl:with-param name="key" select="concat($SecId, '_Legend')"/>
+        </xsl:call-template>
+      </xsl:variable>
+
+      <a>
+        <xsl:attribute name="name"><xsl:if test="$short='true'">s</xsl:if><xsl:value-of select="$address"/></xsl:attribute>
+
+        <div id="screen-only" name="screen-only">
+          <xsl:call-template name="CreateCollapse">
+            <xsl:with-param name="name">Max Capacitance</xsl:with-param>
+            <xsl:with-param name="tag" select="$address"/>
+            <xsl:with-param name="short" select="$short"/>
+            <xsl:with-param name="dir">..</xsl:with-param>
+            <xsl:with-param name="parentTag" select="$pTag"/>
+            <xsl:with-param name="extra" select="$extra"/>
+            <xsl:with-param name="legend" select="concat($Legend, $LegSuffix)"/>
+          </xsl:call-template>
+        </div>
+
+        <xsl:if test="$short='false'">
+          <span hide="false">
+            <xsl:attribute name="id">_<xsl:value-of select="$address"/></xsl:attribute>
+
+            <xsl:if test="$XmlLibrary/Library/CapSummary/Entry[@Name='MXC'] or $LibMode != normal">
+              <table><tr><td>
+                <xsl:if test="$XmlLibrary/Library/CapSummary/Entry[@Name='MXC']">
+                  <xsl:variable name="SecTag">
+                    <xsl:call-template name="Map">
+                      <xsl:with-param name="key" select="'MXC_Tag'"/>
+                    </xsl:call-template>
+                  </xsl:variable>
+                  <xsl:variable name="SecTitle">
+                    <xsl:call-template name="Map">
+                      <xsl:with-param name="key" select="'MXC_Title'"/>
+                    </xsl:call-template>
+                  </xsl:variable>
+
+                  <a>
+                    <xsl:attribute name="href">
+                      <xsl:value-of select="concat('../', $SecTag,'_', /Cell/@CornerName, $Extensions/Summary)"/>
+                    </xsl:attribute>
+                    <xsl:value-of select="$SecTitle"/> for All Cells
+                  </a>
+
+                </xsl:if>
+                <xsl:if test="$XmlLibrary/Library/CapSummary/Entry[@Name='MXC'] and $LibMode != 'normal'">
+                  <xsl:text>&#160;&#160;|&#160;&#160;</xsl:text>
+                </xsl:if>
+                <xsl:if test="$LibMode != 'normal'">
+                  <xsl:call-template name="CreateRefTrg">
+                    <xsl:with-param name="address1" select="concat('#', $address)"/>
+                    <xsl:with-param name="address2" select="concat('#', $address)"/>
+                  </xsl:call-template>
+                </xsl:if>
+              </td></tr></table>
+            </xsl:if>
+            
+            <div>
+              <xsl:attribute name="ngTable">capGr</xsl:attribute>
+              <xsl:attribute name="capGr">max</xsl:attribute>
+              <xsl:attribute name="unit"><xsl:value-of select="$capLabel"/></xsl:attribute>
+              <xsl:if test="lib_max_cap">
+                <xsl:attribute name="libMaxCap">
+                  <xsl:call-template name="FormatUnit">
+                    <xsl:with-param name="value"   select="lib_max_cap"/>
+                    <xsl:with-param name="pattern" select="'0.0000'"/>
+                  </xsl:call-template><xsl:if test="lib_max_cap/@tolExceeded='down'">d</xsl:if><xsl:if test="lib_max_cap/@tolExceeded='up'">u</xsl:if>
+                </xsl:attribute>
+                <xsl:attribute name="libMaxCapFO">
+                  <xsl:choose>
+                    <xsl:when test="lib_max_cap_fo">
+                      <xsl:call-template name="FormatUnit">
+                        <xsl:with-param name="value"  select="lib_max_cap_fo"/>
+                        <xsl:with-param name="pattern">0</xsl:with-param>
+                      </xsl:call-template><xsl:if test="lib_max_cap/@tolExceeded='down'">d</xsl:if><xsl:if test="lib_max_cap/@tolExceeded='up'">u</xsl:if>
+                    </xsl:when>
+                    <xsl:otherwise>
+                      <td class="num">-</td>
+                    </xsl:otherwise>
+                  </xsl:choose>
+                </xsl:attribute>
+              </xsl:if>
+              <xsl:if test="Pins/Pin/max_capacitance">
+                <xsl:attribute name="hasFileCap">y</xsl:attribute>
+              </xsl:if>
+              <xsl:if test="Pins/Pin/max_cap_fo">
+                <xsl:attribute name="hasFileFO">y</xsl:attribute>
+              </xsl:if>
+              <xsl:if test="Pins/Pin/max_cap_em">
+                <xsl:attribute name="hasEMCap">y</xsl:attribute>
+              </xsl:if>
+              <xsl:if test="Pins/Pin/max_cap_power_fo">
+                <xsl:attribute name="hasEMFO">y</xsl:attribute>
+              </xsl:if>
+              <xsl:if test="Pins/Pin/max_cap_dev">
+                <xsl:attribute name="hasDev">y</xsl:attribute>
+              </xsl:if>
+              <xsl:variable name="entries">
+                <xsl:for-each select="Pins/Pin/max_capacitance">
+                  <xsl:value-of select="translate(../Name, '&quot;', '')"/>;
+                  <xsl:call-template name="FormatUnit">
+                    <xsl:with-param name="value"  select="../max_capacitance"/>
+                    <xsl:with-param name="pattern" select="'0.0000'"/>
+                  </xsl:call-template><xsl:if test="../max_capacitance/@tolExceeded='down'">d</xsl:if><xsl:if test="../max_capacitance/@tolExceeded='up'">u</xsl:if>;
+                  <xsl:call-template name="FormatUnit">
+                    <xsl:with-param name="value"  select="../max_cap_fo"/>
+                    <xsl:with-param name="pattern" select="'0'"/>
+                  </xsl:call-template><xsl:if test="../max_cap_fo/@tolExceeded='down'">d</xsl:if><xsl:if test="../max_cap_fo/@tolExceeded='up'">u</xsl:if>;
+                  <xsl:call-template name="FormatUnit">
+                    <xsl:with-param name="value"  select="../max_cap_em"/>
+                    <xsl:with-param name="pattern" select="'0.0000'"/>
+                  </xsl:call-template><xsl:if test="../max_cap_em/@tolExceeded='down'">d</xsl:if><xsl:if test="../max_cap_em/@tolExceeded='up'">u</xsl:if>;
+                  <xsl:call-template name="FormatUnit">
+                    <xsl:with-param name="value"  select="../max_cap_power_fo"/>
+                    <xsl:with-param name="pattern" select="'0'"/>
+                  </xsl:call-template><xsl:if test="../max_cap_power_fo/@tolExceeded='down'">d</xsl:if><xsl:if test="../max_cap_power_fo/@tolExceeded='up'">u</xsl:if>;
+                  <xsl:call-template name="FormatUnit">
+                    <xsl:with-param name="value"  select="../max_cap_dev"/>
+                    <xsl:with-param name="pattern" select="'0.000'"/>
+                  </xsl:call-template><xsl:if test="../max_cap_dev/@tolExceeded='down'">d</xsl:if><xsl:if test="../max_cap_dev/@tolExceeded='up'">u</xsl:if>;
+                  <xsl:value-of select="../max_cap_flag"/>;
+                  <xsl:value-of select="../max_cap_out_of_bounds"/>;
+                  <xsl:value-of select="../max_cap_bounded_by_delay"/>;
+                  <xsl:value-of select="../max_cap_below_min_fo"/>;
+                  <xsl:value-of select="../liberty_max_cap_below_min_fo"/>;$
+                </xsl:for-each>
+              </xsl:variable>
+              <xsl:attribute name="entries"><xsl:value-of select="translate(normalize-space($entries), ' ', '')"/></xsl:attribute>
+            </div>
+          </span>
+        </xsl:if>
+      </a>
+    </xsl:if>
+  </xsl:template>
+
+  <!-- Receiver Capacitance : receiver_capacitance1_fall, receiver_capacitance1_rise, receiver_capacitance2_fall, receiver_capacitance2_rise   -->
+  <xd:doc>Creates the CCS Receiver Capacitance section. Calls the CreateCCSCapSession template</xd:doc>
+  <xsl:template name="ReceiverCapacitance">
+    <xsl:param name="pTag"/>
+    <xsl:param name="short">false</xsl:param>
+    
+    <xsl:if test="Pins/Pin/TimingList/TimingEntry[receiver_capacitance1_fall|receiver_capacitance1_rise|receiver_capacitance2_fall|receiver_capacitance2_rise] or 
+                  Pins/Pin/RecCapList/RecCap[receiver_capacitance1_fall|receiver_capacitance1_rise|receiver_capacitance2_fall|receiver_capacitance2_rise]">
+      <xsl:call-template name="CreateCCSCapSession">
+        <xsl:with-param name="table_rise1" select="'receiver_capacitance1_rise'"/>
+        <xsl:with-param name="table_fall1" select="'receiver_capacitance1_fall'"/>
+        <xsl:with-param name="table_rise2" select="'receiver_capacitance2_rise'"/>
+        <xsl:with-param name="table_fall2" select="'receiver_capacitance2_fall'"/>
+        <xsl:with-param name="SecId"       select="'CCSCap'"/>
+        <xsl:with-param name="short"       select="$short"/>
+        <xsl:with-param name="pTag"        select="$pTag"/>
+      </xsl:call-template>
+    </xsl:if>
+  </xsl:template>
+
+  <xd:doc>Creates the ECSM Receiver Capacitance section. Calls the CreateCCSCapSession template</xd:doc>
+  <xsl:template name="EcsmCapacitance">
+    <xsl:param name="pTag"/>
+    <xsl:param name="short">false</xsl:param>
+    
+    <xsl:if test="Pins/Pin/EcsmCapList/EcsmCapEntry[ecsm_capacitance] or Pins/Pin/TimingList/TimingEntry/EcsmCapListRise/EcsmCapEntry[ecsm_capacitance]
+                  or Pins/Pin/TimingList/TimingEntry/EcsmCapListFall/EcsmCapEntry[ecsm_capacitance] ">
+      <xsl:call-template name="CreateECSMCapSession">
+        <xsl:with-param name="cap_table"  select="'ecsm_capacitance'"/>
+        <xsl:with-param name="SecId"      select="'ECSMCap'"/>
+        <xsl:with-param name="short"      select="$short"/>
+        <xsl:with-param name="pTag"       select="$pTag"/>
+      </xsl:call-template>
+    </xsl:if>
+  </xsl:template>
+
+  <xd:doc>
+    Used to build the Receiver Capacitance and ECSM Capacitance sections. Calls the CreateSecBasics, CreateCellPlotLink and PrintTimingTable templates
+    <xd:param name="SecId" type="string">identifier for the section to be created</xd:param>
+    <xd:param name="SecTitle" type="string">
+      <xd:short>title for the section to be created.</xd:short>
+      <xd:detail>Default value is extracted through the <i>Map</i> template</xd:detail>
+    </xd:param>
+    <xd:param name="SecTag" type="string">
+      <xd:short>tag for the section to be created.</xd:short>
+      <xd:detail>Default value is extracted through the <i>Map</i> template</xd:detail>
+    </xd:param>
+    <xd:param name="cap_table" type="string">name of the XML element holding the cap table</xd:param>
+    <xd:param name="has_summary" type="element">acts as a boolean flag. If the pointed element exists, creates a link to the corresponding timing summary page</xd:param>
+    <xd:param name="short" type="boolean">true if it is a summary entry, false otherwise. Default is <i>false</i></xd:param>
+    <xd:param name="pTag" type="string">address of the parent section</xd:param>
+  </xd:doc>
+  <xsl:template name="CreateECSMCapSession">
+    <xsl:param name="SecId"/>
+    <xsl:param name="SecTitle">
+      <xsl:call-template name="Map">
+        <xsl:with-param name="key" select="concat($SecId,'_Title')"/>
+      </xsl:call-template>
+    </xsl:param>
+    <xsl:param name="SecTag">
+      <xsl:call-template name="Map">
+        <xsl:with-param name="key" select="concat($SecId, '_Tag')"/>
+      </xsl:call-template>
+    </xsl:param>
+    <xsl:param name="cap_table"/>
+    <xsl:param name="has_summary" select="/*/hasALLSummary"/>
+    <xsl:param name="short">false</xsl:param>
+    <xsl:param name="pTag"/>
+    
+    <xsl:variable name="CornerName" select="/Cell/@CornerName"/>
+    
+    <xsl:call-template name="CreateSecBasics">
+      <xsl:with-param name="SecId" select="$SecId"/>
+      <xsl:with-param name="short" select="$short"/>
+      <xsl:with-param name="pTag" select="$pTag"/>
+      <xsl:with-param name="internal">
+        
+        <xsl:if test="$has_summary">
+          <table><tr><td>
+            <a>
+              <xsl:attribute name="href">
+                <xsl:choose>
+                  <xsl:when test="$Config/@doctype='PDF'">
+                    <xsl:variable name="SumSecTitle">
+                      <xsl:call-template name="Map">
+                        <xsl:with-param name="map" select="$MapNode/summary"/>
+                        <xsl:with-param name="key" select="concat($SecId,'_Title')"/>
+                      </xsl:call-template>
+                    </xsl:variable>
+                    <xsl:value-of select="concat('@', $SumSecTitle, ' [', $CornerName,']')"/>
+                  </xsl:when>
+                  <xsl:otherwise>
+                    <xsl:value-of select="concat('../', $SecTag,'_', $CornerName, $Extensions/Summary)"/>
+                  </xsl:otherwise>
+                </xsl:choose>
+              </xsl:attribute>
+              <xsl:value-of select="$SecTitle"/> for All Cells
+            </a>
+          </td></tr></table>
+        </xsl:if>
+
+        <hr class="Title"/>
+        <xsl:for-each select="Pins/Pin/TimingList/TimingEntry/EcsmCapListRise/EcsmCapEntry">
+          <xsl:call-template name="PrintEcsmCapTable">
+            <xsl:with-param name="SecId"      select="$SecId"/>
+            <xsl:with-param name="table_type" select="@Type"/>
+            <xsl:with-param name="cap_table"  select="$cap_table"/>
+            <xsl:with-param name="trans_type" select="'rise'"/>
+          </xsl:call-template>
+        </xsl:for-each>
+        <hr class="Title"/>
+        <xsl:for-each select="Pins/Pin/TimingList/TimingEntry/EcsmCapListFall/EcsmCapEntry">
+          <xsl:call-template name="PrintEcsmCapTable">
+            <xsl:with-param name="SecId"      select="$SecId"/>
+            <xsl:with-param name="table_type" select="@Type"/>
+            <xsl:with-param name="cap_table"  select="$cap_table"/>
+            <xsl:with-param name="trans_type" select="'fall'"/>
+          </xsl:call-template>
+        </xsl:for-each>
+        <hr class="Title"/>
+        <xsl:for-each select="Pins/Pin/EcsmCapList/EcsmCapEntry">
+          <xsl:call-template name="PrintEcsmCapTable">
+            <xsl:with-param name="SecId"      select="$SecId"/>
+            <xsl:with-param name="table_type" select="@Type"/>
+            <xsl:with-param name="cap_table"  select="$cap_table"/>
+            <xsl:with-param name="trans_type" select="''"/>
+          </xsl:call-template>
+        </xsl:for-each>
+      </xsl:with-param>
+    </xsl:call-template>
+  </xsl:template>
+
+  <xd:doc>
+    Prints ECSM capacitance tables
+    <xd:param name="SecId" type="string">identifier for the section to be created</xd:param>
+    <xd:param name="table_type" type="string">type of ECSM cap table (rise or fall)</xd:param>
+    <xd:param name="cap_table" type="string">name of the XML element holding the cap table</xd:param>
+    <xd:param name="trans_type" type="string">type of the transition related to this table (fall or rise)</xd:param>
+  </xd:doc>
+  <xsl:template name="PrintEcsmCapTable">
+    <xsl:param name="SecId"/>
+    <xsl:param name="table_type"/>
+    <xsl:param name="cap_table"/>
+    <xsl:param name="trans_type"/>
+    <xsl:choose>
+      <xsl:when test="$table_type='fall'">
+        <xsl:call-template name="PrintTimingTable">
+          <xsl:with-param name="SecId"      select="$SecId"/>
+          <xsl:with-param name="table_rise" select="*[name()='dummy']"/>
+          <xsl:with-param name="table_fall" select="*[name()=$cap_table]"/>
+          <xsl:with-param name="var1_label" select="$unit/time"/>
+          <xsl:with-param name="var2_label" select="$unit/capacitance"/>
+          <xsl:with-param name="unit_label" select="$capLabel"/>
+          <xsl:with-param name="ignore_v2"  select="'n'"/>
+          <xsl:with-param name="extraCtx"   select="$trans_type"/>
+        </xsl:call-template>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:call-template name="PrintTimingTable">
+          <xsl:with-param name="SecId"      select="$SecId"/>
+          <xsl:with-param name="table_rise" select="*[name()=$cap_table]"/>
+          <xsl:with-param name="table_fall" select="*[name()='dummy']"/>
+          <xsl:with-param name="var1_label" select="$unit/time"/>
+          <xsl:with-param name="var2_label" select="$unit/capacitance"/>
+          <xsl:with-param name="unit_label" select="$capLabel"/>
+          <xsl:with-param name="ignore_v2"  select="'n'"/>
+          <xsl:with-param name="extraCtx"   select="$trans_type"/>
+        </xsl:call-template>
+      </xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+  
+
+  <xd:doc>
+    Used to build the Receiver Capacitance and ECSM Capacitance sections. Calls the CreateSecBasics, CreateCellPlotLink and PrintTimingTable templates
+    <xd:param name="SecId" type="string">identifier for the section to be created</xd:param>
+    <xd:param name="SecTitle" type="string">
+      <xd:short>title for the section to be created.</xd:short>
+      <xd:detail>Default value is extracted through the <i>Map</i> template</xd:detail>
+    </xd:param>
+    <xd:param name="SecTag" type="string">
+      <xd:short>tag for the section to be created.</xd:short>
+      <xd:detail>Default value is extracted through the <i>Map</i> template</xd:detail>
+    </xd:param>
+    <xd:param name="table_rise1" type="string">name of the XML element holding the rise table</xd:param>
+    <xd:param name="table_fall1" type="string">name of the XML element holding the fall table</xd:param>
+    <xd:param name="table_rise2" type="string">name of the XML element holding the rise table</xd:param>
+    <xd:param name="table_fall2" type="string">name of the XML element holding the fall table</xd:param>
+    <xd:param name="ignore_v2" type="char">acts as a boolean flag which indicates if the second variable of the template should be ignored. Possible values are 'y' and 'n' (default)</xd:param>
+    <xd:param name="has_summary" type="element">acts as a boolean flag. If the pointed element exists, creates a link to the corresponding timing summary page</xd:param>
+    <xd:param name="short" type="boolean">true if it is a summary entry, false otherwise. Default is <i>false</i></xd:param>
+    <xd:param name="pTag" type="string">address of the parent section</xd:param>
+  </xd:doc>
+  <xsl:template name="CreateCCSCapSession">
+    <xsl:param name="SecId"/>
+    <xsl:param name="SecTitle">
+      <xsl:call-template name="Map">
+        <xsl:with-param name="key" select="concat($SecId,'_Title')"/>
+      </xsl:call-template>
+    </xsl:param>
+    <xsl:param name="SecTag">
+      <xsl:call-template name="Map">
+        <xsl:with-param name="key" select="concat($SecId, '_Tag')"/>
+      </xsl:call-template>
+    </xsl:param>
+    <xsl:param name="table_rise1"/>
+    <xsl:param name="table_fall1"/>
+    <xsl:param name="table_rise2"/>
+    <xsl:param name="table_fall2"/>
+    <xsl:param name="ignore_v2" select="'n'"/>
+    <xsl:param name="has_summary" select="/*/hasALLSummary"/>
+    <xsl:param name="short">false</xsl:param>
+    <xsl:param name="pTag"/>
+    
+    <xsl:variable name="CornerName" select="/Cell/@CornerName"/>
+    
+    <xsl:call-template name="CreateSecBasics">
+      <xsl:with-param name="SecId" select="$SecId"/>
+      <xsl:with-param name="short" select="$short"/>
+      <xsl:with-param name="pTag" select="$pTag"/>
+      <xsl:with-param name="internal">
+        
+        <xsl:if test="$has_summary">
+          <table><tr><td>
+            <a>
+              <xsl:attribute name="href">
+                <xsl:choose>
+                  <xsl:when test="$Config/@doctype='PDF'">
+                    <xsl:variable name="SumSecTitle">
+                      <xsl:call-template name="Map">
+                        <xsl:with-param name="map" select="$MapNode/summary"/>
+                        <xsl:with-param name="key" select="concat($SecId,'_Title')"/>
+                      </xsl:call-template>
+                    </xsl:variable>
+                    <xsl:value-of select="concat('@', $SumSecTitle, ' [', $CornerName,']')"/>
+                  </xsl:when>
+                  <xsl:otherwise>
+                    <xsl:value-of select="concat('../', $SecTag,'_', $CornerName, $Extensions/Summary)"/>
+                  </xsl:otherwise>
+                </xsl:choose>
+              </xsl:attribute>
+              <xsl:value-of select="$SecTitle"/> for All Cells
+            </a>
+          </td></tr></table>
+        </xsl:if>
+
+        <hr class="Title"/>       
+        <xsl:for-each select="Pins/Pin/TimingList/TimingEntry">
+          <xsl:call-template name="PrintTimingTable">
+            <xsl:with-param name="SecId"      select="$SecId"/>
+            <xsl:with-param name="table_rise" select="*[name()=$table_rise1]"/>
+            <xsl:with-param name="table_fall" select="*[name()=$table_fall1]"/>
+            <xsl:with-param name="var1_label" select="$unit/time"/>
+            <xsl:with-param name="var2_label" select="$unit/capacitance"/>
+            <xsl:with-param name="unit_label" select="$capLabel"/>
+            <xsl:with-param name="ignore_v2"  select="$ignore_v2"/>
+          </xsl:call-template>
+          <xsl:call-template name="PrintTimingTable">
+            <xsl:with-param name="SecId"      select="$SecId"/>
+            <xsl:with-param name="table_rise" select="*[name()=$table_rise2]"/>
+            <xsl:with-param name="table_fall" select="*[name()=$table_fall2]"/>
+            <xsl:with-param name="var1_label" select="$unit/time"/>
+            <xsl:with-param name="var2_label" select="$unit/capacitance"/>
+            <xsl:with-param name="unit_label" select="$capLabel"/>
+            <xsl:with-param name="ignore_v2"  select="$ignore_v2"/>
+          </xsl:call-template>
+        </xsl:for-each>
+
+        <xsl:for-each select="Pins/Pin/RecCapList/RecCap">
+          <xsl:call-template name="PrintTimingTable">
+            <xsl:with-param name="SecId"      select="$SecId"/>
+            <xsl:with-param name="table_rise" select="*[name()=$table_rise1]"/>
+            <xsl:with-param name="table_fall" select="*[name()=$table_fall1]"/>
+            <xsl:with-param name="var1_label" select="$unit/time"/>
+            <xsl:with-param name="var2_label" select="$unit/capacitance"/>
+            <xsl:with-param name="unit_label" select="$capLabel"/>
+            <xsl:with-param name="ignore_v2"  select="$ignore_v2"/>
+          </xsl:call-template>
+          <xsl:call-template name="PrintTimingTable">
+            <xsl:with-param name="SecId"      select="$SecId"/>
+            <xsl:with-param name="table_rise" select="*[name()=$table_rise2]"/>
+            <xsl:with-param name="table_fall" select="*[name()=$table_fall2]"/>
+            <xsl:with-param name="var1_label" select="$unit/time"/>
+            <xsl:with-param name="var2_label" select="$unit/capacitance"/>
+            <xsl:with-param name="unit_label" select="$capLabel"/>
+            <xsl:with-param name="ignore_v2"  select="$ignore_v2"/>
+          </xsl:call-template>
+        </xsl:for-each>
+
+      </xsl:with-param>
+    </xsl:call-template>
+  </xsl:template>
+
+
+  <!-- Current Source vs. NLDM -->
+  <xd:doc>Creates the CsVsNldm section.</xd:doc>
+  <xsl:template name="CsVsNldm">
+    <xsl:param name="short">false</xsl:param>
+    
+    <xsl:if test="Pins/Pin/TimingList/TimingEntry[volt_cell_rise|volt_cell_fall]">
+      <xsl:variable name="address">CsVsNldm</xsl:variable>
+      <a>
+        <xsl:attribute name="name"><xsl:if test="$short='true'">s</xsl:if><xsl:value-of select="$address"/></xsl:attribute>
+
+        <div id="screen-only" name="screen-only">
+          <xsl:call-template name="CreateCollapse">
+            <xsl:with-param name="name">Current Source vs. NLDM</xsl:with-param>
+            <xsl:with-param name="tag" select="$address"/>
+            <xsl:with-param name="short" select="$short"/>
+            <xsl:with-param name="dir">..</xsl:with-param>
+          </xsl:call-template>
+        </div>
+
+        <span>
+          <xsl:attribute name="id"><xsl:if test="$short='true'">s</xsl:if>_<xsl:value-of select="$address"/></xsl:attribute>
+          <table class="sessionSplit">
+            <tr>
+              <td>
+                <xsl:call-template name="PropDelayVoltageThr"> <xsl:with-param name="pTag" select="$address"/><xsl:with-param name="short" select="$short"/></xsl:call-template>
+              </td>
+            </tr>
+          </table>
+        </span>
+      </a>
+    </xsl:if>
+  </xsl:template>
+
+  <!-- Propagation Delay Voltage Threshold : volt_cell_fall & volt_cell_rise -->
+  <xd:doc>Creates the Propagation Delay Voltage Threshold section. Calls the CreateCellTimingSession template</xd:doc>
+  <xsl:template name="PropDelayVoltageThr">
+    <xsl:param name="pTag"/>
+    <xsl:param name="short">false</xsl:param>
+    <xsl:if test="Pins/Pin/TimingList/TimingEntry[volt_cell_rise|volt_cell_fall]">
+      <xsl:call-template name="CreateCellTimingSession">
+        <xsl:with-param name="table_rise"  select="'volt_cell_rise'"/>
+        <xsl:with-param name="table_fall"  select="'volt_cell_fall'"/>
+        <xsl:with-param name="SecId"       select="'PDV'"/>
+        <xsl:with-param name="has_summary" select="$XmlLibrary/Library/CsVsNldmSummary/Entry[@Name='PDV']"/>
+        <xsl:with-param name="short"       select="$short"/>
+        <xsl:with-param name="pTag"        select="$pTag"/>
+      </xsl:call-template>
+    </xsl:if>
+  </xsl:template>
+  
+
+  <!-- Timing -->
+  <xd:doc>Creates the Timing section.</xd:doc>
+  <xsl:template name="Timing">
+    <xsl:param name="short">false</xsl:param>
+    
+    <xsl:if test="Pins/Pin/TimingList/TimingEntry[cell_rise|cell_fall|rise_transition|fall_transition|full_cycle_delay] or
+                  Pins/Pin[ConstrainedDataToOutputDelayFall|ConstrainedDataToOutputDelayRise]">
+      <xsl:variable name="address">Timing</xsl:variable>
+      <a>
+        <xsl:attribute name="name"><xsl:if test="$short='true'">s</xsl:if><xsl:value-of select="$address"/></xsl:attribute>
+
+        <div id="screen-only" name="screen-only">
+          <xsl:call-template name="CreateCollapse">
+            <xsl:with-param name="name" select="$address"/>
+            <xsl:with-param name="tag" select="$address"/>
+            <xsl:with-param name="short" select="$short"/>
+            <xsl:with-param name="dir">..</xsl:with-param>
+          </xsl:call-template>
+        </div>
+
+        <xsl:if test="ArcReductions/TimingEntry and $short='true'">
+          <div id="print-only" name="print-only">
+            <br/>
+          </div>
+          <div class="no-page-break">
+            <xsl:call-template name="PrintArcRedTable">
+              <xsl:with-param name="arcRedNode"   select="./ArcReductions"/>
+              <xsl:with-param name="type"         select="'timing'"/>
+            </xsl:call-template>
+          </div>
+        </xsl:if>
+
+        <xsl:if test="/*/@ShortMode != 'true'">
+          <span>
+            <xsl:attribute name="id"><xsl:if test="$short='true'">s</xsl:if>_<xsl:value-of select="$address"/></xsl:attribute>
+            <table class="sessionSplit">
+              <tr>
+                <td>
+                  <xsl:call-template name="PropagationDelay"> <xsl:with-param name="pTag" select="$address"/><xsl:with-param name="short" select="$short"/></xsl:call-template>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <xsl:call-template name="OutputSlope">      <xsl:with-param name="pTag" select="$address"/><xsl:with-param name="short" select="$short"/></xsl:call-template>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <xsl:call-template name="FullCycleDelay">   <xsl:with-param name="pTag" select="$address"/><xsl:with-param name="short" select="$short"/></xsl:call-template>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <xsl:call-template name="DQDelay">          <xsl:with-param name="pTag" select="$address"/><xsl:with-param name="short" select="$short"/></xsl:call-template>
+                </td>
+              </tr>
+            </table>
+          </span>
+        </xsl:if>
+      </a>
+    </xsl:if>
+  </xsl:template>
+
+  <!-- Propagation Delay : cell_fall & cell_rise -->
+  <xd:doc>Creates the Propagation Delay section. Calls the CreateCellTimingSession template</xd:doc>
+  <xsl:template name="PropagationDelay">
+    <xsl:param name="pTag"/>
+    <xsl:param name="short">false</xsl:param>
+    <xsl:if test="Pins/Pin/TimingList/TimingEntry[cell_rise|cell_fall]">
+      <xsl:call-template name="CreateCellTimingSession">
+        <xsl:with-param name="table_rise"  select="'cell_rise'"/>
+        <xsl:with-param name="table_fall"  select="'cell_fall'"/>
+        <xsl:with-param name="SecId"       select="'PD'"/>
+        <xsl:with-param name="has_summary" select="$XmlLibrary/Library/TimingSummary/Entry[@Name='PD']"/>
+        <xsl:with-param name="short"       select="$short"/>
+        <xsl:with-param name="pTag"        select="$pTag"/>
+      </xsl:call-template>
+    </xsl:if>
+  </xsl:template>
+  
+  <!-- Output Slope: rise_transition, fall_transition-->
+  <xd:doc>Creates the Output Slope section. Calls the CreateCellTimingSession template</xd:doc>
+  <xsl:template name="OutputSlope">
+    <xsl:param name="pTag"/>
+    <xsl:param name="short">false</xsl:param>
+    <xsl:if test="Pins/Pin/TimingList/TimingEntry[rise_transition|fall_transition]">
+      <xsl:call-template name="CreateCellTimingSession">
+        <xsl:with-param name="table_rise"  select="'rise_transition'"/>
+        <xsl:with-param name="table_fall"  select="'fall_transition'"/>
+        <xsl:with-param name="SecId"       select="'OS'"/>
+        <xsl:with-param name="has_summary" select="$XmlLibrary/Library/TimingSummary/Entry[@Name='OS']"/>
+        <xsl:with-param name="short"       select="$short"/>
+        <xsl:with-param name="pTag"        select="$pTag"/>
+      </xsl:call-template>
+    </xsl:if>
+  </xsl:template>
+
+
+  <xd:doc>Creates the Full Cycle Delay section. Calls the CreateCellPowerSession template</xd:doc>
+  <xsl:template name="FullCycleDelay">
+    <xsl:param name="pTag"/>
+    <xsl:param name="short">false</xsl:param>
+    <xsl:if test="Pins/Pin/TimingList/TimingEntry[full_cycle_delay]">
+      <xsl:call-template name="CreateCellTimingSession">
+        <xsl:with-param name="table_rise"       select="'full_cycle_delay'"/>
+        <xsl:with-param name="table_label_rise" select="'delay '"/>
+        <xsl:with-param name="table_fall"       select="''"/>
+        <xsl:with-param name="SecId"            select="'FCD'"/>
+        <xsl:with-param name="has_summary"      select="$XmlLibrary/Library/TimingSummary/Entry[@Name='FCD']"/>
+        <xsl:with-param name="short"            select="$short"/>
+        <xsl:with-param name="pTag"             select="$pTag"/>
+      </xsl:call-template>
+    </xsl:if>
+  </xsl:template>
+  
+  <!-- D-Q Delay -->
+  <xd:doc>Creates the Constrained Data to Output table. Calls the CreateSecBasics template</xd:doc>
+  <xsl:template name="DQDelay">
+    <xsl:param name="pTag"/>
+    <xsl:param name="short">false</xsl:param>
+
+    <xsl:variable name="CornerName" select="/Cell/@CornerName"/>
+    <xsl:variable name="has_summary" select="$XmlLibrary/Library/TimingSummary/Entry[@Name='DQ']"/>
+    <xsl:variable name="SecTag">
+      <xsl:call-template name="Map">
+        <xsl:with-param name="key" select="concat('DQ', '_Tag')"/>
+      </xsl:call-template>
+    </xsl:variable>
+    <xsl:variable name="SecTitle">
+      <xsl:call-template name="Map">
+        <xsl:with-param name="key" select="concat('DQ','_Title')"/>
+      </xsl:call-template>
+    </xsl:variable>
+    
+    <xsl:if test="Pins/Pin[ConstrainedDataToOutputDelayFall|ConstrainedDataToOutputDelayRise]">
+      <xsl:call-template name="CreateSecBasics">
+        <xsl:with-param name="SecId" select="'DQ'"/>
+        <xsl:with-param name="short" select="$short"/>
+        <xsl:with-param name="pTag"  select="$pTag"/>
+        <xsl:with-param name="internal">
+
+          <xsl:if test="$has_summary">
+            <table><tr><td>
+              <a>
+                <xsl:attribute name="href">
+                  <xsl:value-of select="concat('../', $SecTag,'_', $CornerName, $Extensions/Summary)"/>
+                </xsl:attribute>
+                <xsl:value-of select="$SecTitle"/> for All Cells
+              </a>
+            </td></tr></table>
+          </xsl:if>
+
+          <xsl:for-each select="Pins/Pin">
+            <xsl:call-template name="PrintTimingTable">
+              <xsl:with-param name="SecId"         select="'DQ'"/>
+              <xsl:with-param name="table_rise"    select="ConstrainedDataToOutputDelayRise"/>
+              <xsl:with-param name="table_fall"    select="ConstrainedDataToOutputDelayFall"/>
+              <xsl:with-param name="var1_label"    select="$unit/time"/>
+              <xsl:with-param name="var2_label"    select="$unit/time"/>
+              <xsl:with-param name="unit_label"    select="$timLabel"/>
+            </xsl:call-template>
+          </xsl:for-each>
+        </xsl:with-param>
+      </xsl:call-template>
+    </xsl:if>
+  </xsl:template>
+
+
+  <xd:doc>
+    Used to build the Output Slope and Propagation Delay sections. Calls the CreateSecBasics, CreateCellPlotLink and PrintTimingTable templates
+    <xd:param name="SecId" type="string">identifier for the section to be created</xd:param>
+    <xd:param name="SecTitle" type="string">
+      <xd:short>title for the section to be created.</xd:short>
+      <xd:detail>Default value is extracted through the <i>Map</i> template</xd:detail>
+    </xd:param>
+    <xd:param name="SecTag" type="string">
+      <xd:short>tag for the section to be created.</xd:short>
+      <xd:detail>Default value is extracted through the <i>Map</i> template</xd:detail>
+    </xd:param>
+    <xd:param name="table_rise" type="string">name of the XML element holding the rise table</xd:param>
+    <xd:param name="table_fall" type="string">name of the XML element holding the fall table</xd:param>
+    <xd:param name="ignore_v2" type="char">acts as a boolean flag which indicates if the second variable of the template should be ignored. Possible values are 'y' and 'n' (default)</xd:param>
+    <xd:param name="has_summary" type="element">acts as a boolean flag. If the pointed element exists, creates a link to the corresponding timing summary page</xd:param>
+    <xd:param name="short" type="boolean">true if it is a summary entry, false otherwise. Default value is <i>false</i></xd:param>
+    <xd:param name="pTag" type="string">address of the parent section</xd:param>
+  </xd:doc>
+  <xsl:template name="CreateCellTimingSession">  
+    <xsl:param name="SecId"/>
+    <xsl:param name="SecTitle">
+      <xsl:call-template name="Map">
+        <xsl:with-param name="key" select="concat($SecId,'_Title')"/>
+      </xsl:call-template>
+    </xsl:param>
+    <xsl:param name="SecTag">
+      <xsl:call-template name="Map">
+        <xsl:with-param name="key" select="concat($SecId, '_Tag')"/>
+      </xsl:call-template>
+    </xsl:param>
+    <xsl:param name="table_rise"/>
+    <xsl:param name="table_fall"/>
+    <xsl:param name="table_label_fall" select="'fall '"/>
+    <xsl:param name="table_label_rise" select="'rise '"/>
+    <xsl:param name="ignore_v2" select="'n'"/>
+    <xsl:param name="has_summary" select="/*/hasALLSummary"/>
+    <xsl:param name="short">false</xsl:param>
+    <xsl:param name="pTag"/>
+    
+    <xsl:variable name="CornerName" select="/Cell/@CornerName"/>
+
+    <xsl:call-template name="CreateSecBasics">
+      <xsl:with-param name="SecId" select="$SecId"/>
+      <xsl:with-param name="short" select="$short"/>
+      <xsl:with-param name="pTag" select="$pTag"/>
+      <xsl:with-param name="internal">
+        <xsl:if test="$has_summary">
+          <table><tr><td>
+            <a>
+              <xsl:attribute name="href">
+                <xsl:choose>
+                  <xsl:when test="$Config/@doctype='PDF'">
+                    <xsl:variable name="SumSecTitle">
+                      <xsl:call-template name="Map">
+                        <xsl:with-param name="map" select="$MapNode/summary"/>
+                        <xsl:with-param name="key" select="concat($SecId,'_Title')"/>
+                      </xsl:call-template>
+                    </xsl:variable>
+                    <xsl:value-of select="concat('@', $SumSecTitle, ' [', $CornerName,']')"/>
+                  </xsl:when>
+                  <xsl:otherwise>
+                    <xsl:value-of select="concat('../', $SecTag,'_', $CornerName, $Extensions/Summary)"/>
+                  </xsl:otherwise>
+                </xsl:choose>
+              </xsl:attribute>
+              <xsl:value-of select="$SecTitle"/> for All Cells
+            </a>
+          </td></tr></table>
+        </xsl:if>
+        <hr class="Title"/>
+        <xsl:for-each select="Pins/Pin/TimingList/TimingEntry">
+          <xsl:choose>
+            <xsl:when test="$table_rise='rise_constraint_ripple_rel_pushout'">
+              <xsl:call-template name="PrintTimingTable">
+                <xsl:with-param name="SecId"        select="$SecId"/>
+                <xsl:with-param name="table_rise"   select="*[name()=$table_rise]"/>
+                <xsl:with-param name="table_fall"   select="*[name()=$table_fall]"/>
+                <xsl:with-param name="var1_label"   select="$unit/time"/>
+                <xsl:with-param name="var2_label"   select="$unit/capacitance"/>
+                <xsl:with-param name="var3_label"   select="$unit/capacitance"/>
+                <xsl:with-param name="unit_label"   select="$unit/perc"/>
+                <xsl:with-param name="constrValid"  select="'y'"/>
+                <xsl:with-param name="ignore_v2"    select="$ignore_v2"/>
+              </xsl:call-template>
+            </xsl:when>
+            <xsl:otherwise>
+              <xsl:call-template name="PrintTimingTable">
+                <xsl:with-param name="SecId"            select="$SecId"/>
+                <xsl:with-param name="table_rise"       select="*[name()=$table_rise]"/>
+                <xsl:with-param name="table_fall"       select="*[name()=$table_fall]"/>
+                <xsl:with-param name="table_label_fall" select="$table_label_fall"/>
+                <xsl:with-param name="table_label_rise" select="$table_label_rise"/>
+                <xsl:with-param name="var1_label"       select="$unit/time"/>
+                <xsl:with-param name="var2_label"       select="$unit/capacitance"/>
+                <xsl:with-param name="var3_label"       select="$unit/capacitance"/>
+                <xsl:with-param name="unit_label"       select="$timLabel"/>
+                <xsl:with-param name="ignore_v2"        select="$ignore_v2"/>
+              </xsl:call-template>
+            </xsl:otherwise>
+          </xsl:choose>
+        </xsl:for-each>
+      </xsl:with-param>     
+    </xsl:call-template>    
+  </xsl:template>
+
+  <xd:doc>
+    Used to build the Pushout session. Calls the CreateSecBasics and PrintTimingTable templates
+    <xd:param name="SecId" type="string">identifier for the section to be created</xd:param>
+    <xd:param name="SecTitle" type="string">
+      <xd:short>title for the section to be created.</xd:short>
+      <xd:detail>Default value is extracted through the <i>Map</i> template</xd:detail>
+    </xd:param>
+    <xd:param name="SecTag" type="string">
+      <xd:short>tag for the section to be created.</xd:short>
+      <xd:detail>Default value is extracted through the <i>Map</i> template</xd:detail>
+    </xd:param>
+    <xd:param name="table_rise_rel" type="string">name of the XML element holding the relative rise table</xd:param>
+    <xd:param name="table_fall_rel" type="string">name of the XML element holding the relative fall table</xd:param>
+    <xd:param name="table_rise_abs" type="string">name of the XML element holding the absolute rise table</xd:param>
+    <xd:param name="table_fall_abs" type="string">name of the XML element holding the absolute fall table</xd:param>
+    <xd:param name="table_dep_rise_rel" type="string">name of the XML element holding the dependent relative rise table</xd:param>
+    <xd:param name="table_dep_fall_rel" type="string">name of the XML element holding the dependent relative fall table</xd:param>
+    <xd:param name="table_dep_rise_abs" type="string">name of the XML element holding the dependent absolute rise table</xd:param>
+    <xd:param name="table_dep_fall_abs" type="string">name of the XML element holding the dependent absolute fall table</xd:param>
+    <xd:param name="has_summary" type="element">acts as a boolean flag. If the pointed element exists, creates a link to the corresponding timing summary page</xd:param>
+    <xd:param name="short" type="boolean">true if it is a summary entry, false otherwise. Default value is <i>false</i></xd:param>
+    <xd:param name="pTag" type="string">address of the parent section</xd:param>
+  </xd:doc>
+  <xsl:template name="CreatePushoutSession">  
+    <xsl:param name="SecId"/>
+    <xsl:param name="SecTitle">
+      <xsl:call-template name="Map">
+        <xsl:with-param name="key" select="concat($SecId,'_Title')"/>
+      </xsl:call-template>
+    </xsl:param>
+    <xsl:param name="SecTag">
+      <xsl:call-template name="Map">
+        <xsl:with-param name="key" select="concat($SecId, '_Tag')"/>
+      </xsl:call-template>
+    </xsl:param>
+    <xsl:param name="table_rise_rel"/>
+    <xsl:param name="table_rise_abs"/>
+    <xsl:param name="table_fall_rel"/>
+    <xsl:param name="table_fall_abs"/>
+    <xsl:param name="table_dep_rise_rel"/>
+    <xsl:param name="table_dep_rise_abs"/>
+    <xsl:param name="table_dep_fall_rel"/>
+    <xsl:param name="table_dep_fall_abs"/>
+    <xsl:param name="has_summary" select="/*/hasALLSummary"/>
+    <xsl:param name="short">false</xsl:param>
+    <xsl:param name="pTag"/>
+    
+    <xsl:variable name="CornerName" select="/Cell/@CornerName"/>
+
+    <xsl:call-template name="CreateSecBasics">
+      <xsl:with-param name="SecId" select="$SecId"/>
+      <xsl:with-param name="short" select="$short"/>
+      <xsl:with-param name="pTag" select="$pTag"/>
+      <xsl:with-param name="internal">
+        <p>
+          <ul>
+            <li>Constraint Validation Flags:</li>
+            <li>D: value has been discarded from constraint validation statistics</li>
+            <li>N: nominal delay is too small and can lead to incorrect constraint validation measures</li>
+            <li>T: nominal slew is too small and can lead to incorrect constraint validation measures</li>
+            <li>W: data signal minimum window height limits push-out value</li>
+          </ul>
+        </p>
+        <table>
+          <xsl:call-template name="CreatePushoutInnerSection">
+            <xsl:with-param name="SecId"><xsl:value-of select="concat($SecId,'_Setup')"/></xsl:with-param>
+            <xsl:with-param name="SecTitle" select="'Setup'"/>
+            <xsl:with-param name="pTag" select="$SecTag"/>
+            <xsl:with-param name="table_type1_fall" select="'setup_falling'"/>
+            <xsl:with-param name="table_type1_rise" select="'setup_rising'"/>
+            <xsl:with-param name="table_rise_rel" select="$table_rise_rel"/>
+            <xsl:with-param name="table_rise_abs" select="$table_rise_abs"/>
+            <xsl:with-param name="table_fall_rel" select="$table_fall_rel"/>
+            <xsl:with-param name="table_fall_abs" select="$table_fall_abs"/>
+            <xsl:with-param name="has_summary"    select="$has_summary"/>
+            <xsl:with-param name="summary_id"     select="'Setup'"/>
+          </xsl:call-template>
+          <xsl:call-template name="CreatePushoutInnerSection">
+            <xsl:with-param name="SecId"><xsl:value-of select="concat($SecId,'_Hold')"/></xsl:with-param>
+            <xsl:with-param name="SecTitle" select="'Hold'"/>
+            <xsl:with-param name="pTag" select="$SecTag"/>
+            <xsl:with-param name="table_type1_fall" select="'hold_falling'"/>
+            <xsl:with-param name="table_type1_rise" select="'hold_rising'"/>
+            <xsl:with-param name="table_rise_rel" select="$table_rise_rel"/>
+            <xsl:with-param name="table_rise_abs" select="$table_rise_abs"/>
+            <xsl:with-param name="table_fall_rel" select="$table_fall_rel"/>
+            <xsl:with-param name="table_fall_abs" select="$table_fall_abs"/>
+            <xsl:with-param name="has_summary"    select="$has_summary"/>
+            <xsl:with-param name="summary_id"     select="'Hold'"/>
+          </xsl:call-template>
+          <xsl:call-template name="CreatePushoutInnerSection">
+            <xsl:with-param name="SecId"><xsl:value-of select="concat($SecId,'_SetupHold')"/></xsl:with-param>
+            <xsl:with-param name="SecTitle" select="'Setup &amp; Hold'"/>
+            <xsl:with-param name="pTag" select="$SecTag"/>
+            <xsl:with-param name="table_type1_fall" select="'setup_falling'"/>
+            <xsl:with-param name="table_type1_rise" select="'setup_rising'"/>
+            <xsl:with-param name="table_type2_fall" select="'hold_falling'"/>
+            <xsl:with-param name="table_type2_rise" select="'hold_rising'"/>
+            <xsl:with-param name="table_rise_rel"   select="$table_dep_rise_rel"/>
+            <xsl:with-param name="table_rise_abs"   select="$table_dep_rise_abs"/>
+            <xsl:with-param name="table_fall_rel"   select="$table_dep_fall_rel"/>
+            <xsl:with-param name="table_fall_abs"   select="$table_dep_fall_abs"/>
+            <xsl:with-param name="has_summary"      select="$has_summary"/>
+            <xsl:with-param name="summary_id"       select="'SetupHold'"/>
+          </xsl:call-template>
+          <xsl:call-template name="CreatePushoutInnerSection">
+            <xsl:with-param name="SecId"><xsl:value-of select="concat($SecId,'_MinPW')"/></xsl:with-param>
+            <xsl:with-param name="SecTitle" select="'Min Pulse Width'"/>
+            <xsl:with-param name="pTag" select="$SecTag"/>
+            <xsl:with-param name="table_type1_fall" select="'min_pulse_width'"/>
+            <xsl:with-param name="table_type1_rise" select="''"/>
+            <xsl:with-param name="table_rise_rel" select="$table_rise_rel"/>
+            <xsl:with-param name="table_rise_abs" select="$table_rise_abs"/>
+            <xsl:with-param name="table_fall_rel" select="$table_fall_rel"/>
+            <xsl:with-param name="table_fall_abs" select="$table_fall_abs"/>
+            <xsl:with-param name="has_summary"    select="$has_summary"/>            
+            <xsl:with-param name="summary_id"     select="'MinPW'"/>
+          </xsl:call-template>
+          <xsl:call-template name="CreatePushoutInnerSection">
+            <xsl:with-param name="SecId"><xsl:value-of select="concat($SecId,'_Rec')"/></xsl:with-param>
+            <xsl:with-param name="SecTitle" select="'Recovery'"/>
+            <xsl:with-param name="pTag" select="$SecTag"/>
+            <xsl:with-param name="table_type1_fall" select="'recovery_falling'"/>
+            <xsl:with-param name="table_type1_rise" select="'recovery_rising'"/>
+            <xsl:with-param name="table_rise_rel" select="$table_rise_rel"/>
+            <xsl:with-param name="table_rise_abs" select="$table_rise_abs"/>
+            <xsl:with-param name="table_fall_rel" select="$table_fall_rel"/>
+            <xsl:with-param name="table_fall_abs" select="$table_fall_abs"/>
+            <xsl:with-param name="has_summary"    select="$has_summary"/>
+            <xsl:with-param name="summary_id"     select="'Rec'"/>
+          </xsl:call-template>
+          <xsl:call-template name="CreatePushoutInnerSection">
+            <xsl:with-param name="SecId"><xsl:value-of select="concat($SecId,'_Rem')"/></xsl:with-param>
+            <xsl:with-param name="SecTitle" select="'Removal'"/>
+            <xsl:with-param name="pTag" select="$SecTag"/>
+            <xsl:with-param name="table_type1_fall" select="'removal_falling'"/>
+            <xsl:with-param name="table_type1_rise" select="'removal_rising'"/>
+            <xsl:with-param name="table_rise_rel" select="$table_rise_rel"/>
+            <xsl:with-param name="table_rise_abs" select="$table_rise_abs"/>
+            <xsl:with-param name="table_fall_rel" select="$table_fall_rel"/>
+            <xsl:with-param name="table_fall_abs" select="$table_fall_abs"/>
+            <xsl:with-param name="has_summary"    select="$has_summary"/>
+            <xsl:with-param name="summary_id"     select="'Rem'"/>
+          </xsl:call-template>
+
+        </table>
+      </xsl:with-param>
+    </xsl:call-template>
+  </xsl:template>
+
+  <!-- Creates Pushout section data -->
+  <xd:doc>
+    Used to create the Pushout tables.
+    <xd:param name="SecId" type="string">identifier for the section to be created</xd:param>
+    <xd:param name="SecTitle" type="string">title for the section to be created</xd:param>
+    <xd:param name="SecTag" type="string">tag for the section to be created.</xd:param>
+    <xd:param name="table_type1_rise" type="string">timing type (rising) filter</xd:param>
+    <xd:param name="table_type1_fall" type="string">timing type (falling) filter</xd:param>
+    <xd:param name="table_type2_rise" type="string">additional timing type (rising) filter</xd:param>
+    <xd:param name="table_type2_fall" type="string">additional timing type (falling) filter</xd:param>
+    <xd:param name="table_rise_rel" type="string">name of the XML element holding the relative rise table</xd:param>
+    <xd:param name="table_fall_rel" type="string">name of the XML element holding the relative fall table</xd:param>
+    <xd:param name="table_rise_abs" type="string">name of the XML element holding the absolute rise table</xd:param>
+    <xd:param name="table_fall_abs" type="string">name of the XML element holding the absolute fall table</xd:param>
+  </xd:doc>
+  <xsl:template name="CreatePushoutInnerSection">
+    <xsl:param name="SecId"/>
+    <xsl:param name="SecTitle"/>
+    <xsl:param name="pTag"/>
+    <xsl:param name="table_type1_fall"/>
+    <xsl:param name="table_type1_rise"/>
+    <xsl:param name="table_type2_fall"><xsl:value-of select="''"/></xsl:param>
+    <xsl:param name="table_type2_rise"><xsl:value-of select="''"/></xsl:param>
+    <xsl:param name="table_rise_rel"/>
+    <xsl:param name="table_rise_abs"/>
+    <xsl:param name="table_fall_rel"/>
+    <xsl:param name="table_fall_abs"/>
+    <xsl:param name="has_summary"/>
+    <xsl:param name="summary_id"/>
+
+    <xsl:if test="Pins/Pin/TimingList/TimingEntry[@TimingType=$table_type1_rise or @TimingType=$table_type1_fall or @TimingType=$table_type2_rise or @TimingType=$table_type2_fall]/*[name()=$table_rise_rel] or
+                  Pins/Pin/TimingList/TimingEntry[@TimingType=$table_type1_rise or @TimingType=$table_type1_fall or @TimingType=$table_type2_rise or @TimingType=$table_type2_fall]/*[name()=$table_fall_rel]">
+      <tr><td>
+        <xsl:call-template name="CreateSecBasics">
+          <xsl:with-param name="SecId"     select="$SecId"/>
+          <xsl:with-param name="SecTitle"  select="$SecTitle"/>
+          <xsl:with-param name="SecTag"    select="concat($SecId,'_Tag')"/>
+          <xsl:with-param name="pTag"      select="$pTag"/>
+          <xsl:with-param name="addLegend" select="'false'"/>
+          <xsl:with-param name="internal">
+            <xsl:if test="$has_summary">
+              <xsl:variable name="CornerName" select="/Cell/@CornerName"/>
+              <table><tr><td>
+                <a>
+                  <xsl:attribute name="href">
+                    <xsl:value-of select="concat('../ConstrValid_', $CornerName, $Extensions/Summary, '#Table_', $summary_id)"/>
+                  </xsl:attribute>
+                  Constraint Validation <xsl:value-of select="$SecTitle"/> for All Cells
+                </a>
+              </td></tr></table>
+            </xsl:if>
+            
+            <hr class="Title"/>
+            <table>
+              <tr>
+                <th>Relative Pushout</th>
+                <xsl:if test="$table_rise_abs != ''">
+                  <th>Absolute Pushout</th>
+                </xsl:if>
+              </tr>
+              <tr><td/><xsl:if test="$table_rise_abs != ''"><td/></xsl:if></tr>
+              <xsl:for-each select="Pins/Pin/TimingList/TimingEntry[@TimingType=$table_type1_rise or @TimingType=$table_type1_fall or @TimingType=$table_type2_rise or @TimingType=$table_type2_fall]">
+                <xsl:if test="*[name()=$table_rise_rel] | *[name()=$table_fall_rel]">
+                  <tr>
+                    <td align="center">
+                      <xsl:call-template name="PrintTimingTable">
+                        <xsl:with-param name="SecId"         select="$SecId"/>
+                        <xsl:with-param name="table_rise"    select="*[name()=$table_rise_rel]"/>
+                        <xsl:with-param name="table_fall"    select="*[name()=$table_fall_rel]"/>
+                        <xsl:with-param name="var1_label"    select="$unit/time"/>
+                        <xsl:with-param name="var2_label"    select="$unit/time"/>
+                        <xsl:with-param name="unit_label"    select="$unit/perc"/>
+                        <xsl:with-param name="constrValid"   select="'y'"/>
+                      </xsl:call-template>
+                    </td>
+                    <xsl:if test="$table_rise_abs != ''">
+                      <td align="center">
+                        <xsl:call-template name="PrintTimingTable">
+                          <xsl:with-param name="SecId"         select="$SecId"/>
+                          <xsl:with-param name="table_rise"    select="*[name()=$table_rise_abs]"/>
+                          <xsl:with-param name="table_fall"    select="*[name()=$table_fall_abs]"/>
+                          <xsl:with-param name="var1_label"    select="$unit/time"/>
+                          <xsl:with-param name="var2_label"    select="$unit/time"/>
+                          <xsl:with-param name="unit_label"    select="$timLabel"/>
+                          <xsl:with-param name="constrValid"   select="'y'"/>
+                        </xsl:call-template>
+                      </td>
+                    </xsl:if>
+                  </tr>
+                </xsl:if>
+              </xsl:for-each>
+            </table>
+            
+          </xsl:with-param>
+        </xsl:call-template>
+      </td></tr>
+    </xsl:if>
+  </xsl:template>
+
+
+  <!-- Constraint Validation -->
+  <xd:doc>Creates the Constraint Validtaion section.</xd:doc>
+  <xsl:template name="ConstrValid">
+    <xsl:param name="pTag"/>
+    <xsl:param name="short">false</xsl:param>
+    <xsl:if test="Pins/Pin/TimingList/TimingEntry[@TimingType='setup_falling' or @TimingType='setup_rising' or
+                  @TimingType='hold_falling' or @TimingType='hold_rising' or
+                  @TimingType='recovery_falling' or @TimingType='recovery_rising' or
+                  @TimingType='removal_falling' or @TimingType='removal_rising' or
+                  @TimingType='min_pulse_width'][fall_constraint_delay_rel_pushout | rise_constraint_delay_rel_pushout |
+                                                fall_constraint_tran_rel_pushout | rise_constraint_tran_rel_pushout |
+                                                fall_constraint_rel_pushout | rise_constraint_rel_pushout | 
+                                                fall_constraint_ripple_rel_pushout | rise_constraint_ripple_rel_pushout]">
+      <xsl:variable name="address">ConstrValid</xsl:variable>
+      <a>
+        <xsl:attribute name="name"><xsl:if test="$short='true'">s</xsl:if><xsl:value-of select="$address"/></xsl:attribute>
+
+        <div id="screen-only" name="screen-only">
+          <xsl:call-template name="CreateCollapse">
+            <xsl:with-param name="name" select="'Constraint Validation'"/>
+            <xsl:with-param name="tag" select="$address"/>
+            <xsl:with-param name="short" select="$short"/>
+            <xsl:with-param name="dir">..</xsl:with-param>
+          </xsl:call-template>
+          <xsl:if test="ArcReductions/PushoutData and $short='true'">
+            <xsl:call-template name="PrintPushoutSummary"/>
+          </xsl:if>
+        </div>
+       
+        <span>
+          <xsl:attribute name="id"><xsl:if test="$short='true'">s</xsl:if>_<xsl:value-of select="$address"/></xsl:attribute>
+            <table class="sessionSplit">
+              <tr>
+                <td>
+                  <xsl:call-template name="Pushout">         <xsl:with-param name="pTag" select="$address"/><xsl:with-param name="short" select="$short"/></xsl:call-template>
+                </td>
+              </tr>
+            </table>
+        </span>
+      </a>
+    </xsl:if>
+  </xsl:template>
+
+  <!-- Constraints -->
+  <xd:doc>Creates the Constraints section.</xd:doc>
+  <xsl:template name="Constraints">
+    <xsl:param name="pTag"/>
+    <xsl:param name="short">false</xsl:param>
+    <xsl:if test="Pins/Pin/TimingList/TimingEntry[@TimingType='setup_falling' or @TimingType='setup_rising' or
+                  @TimingType='hold_falling' or @TimingType='hold_rising' or
+                  @TimingType='recovery_falling' or @TimingType='recovery_rising' or
+                  @TimingType='removal_falling' or @TimingType='removal_rising' or
+                  @TimingType='min_pulse_width'][fall_constraint | rise_constraint |
+                                                fall_constraint_delay_rel_pushout | rise_constraint_delay_rel_pushout |
+                                                fall_constraint_tran_rel_pushout | rise_constraint_tran_rel_pushout |
+                                                fall_constraint_rel_pushout | rise_constraint_rel_pushout |
+                                                MetastabilityWindowSHHigh | MetastabilityWindowSHLow] or
+                  Pins/Pin[RecoveryRemovalHigh|RecoveryRemovalHigh|min_pulse_width_low|min_pulse_width_high]">
+      <xsl:variable name="address">Constraints</xsl:variable>
+      <a>
+        <xsl:attribute name="name"><xsl:if test="$short='true'">s</xsl:if><xsl:value-of select="$address"/></xsl:attribute>
+
+        <div id="screen-only" name="screen-only">
+          <xsl:call-template name="CreateCollapse">
+            <xsl:with-param name="name" select="$address"/>
+            <xsl:with-param name="tag" select="$address"/>
+            <xsl:with-param name="short" select="$short"/>
+            <xsl:with-param name="dir">..</xsl:with-param>
+          </xsl:call-template>
+          <xsl:if test="ArcReductions/ConstraintEntry and $short='true'">
+            <xsl:call-template name="PrintArcRedTable">
+              <xsl:with-param name="arcRedNode"   select="./ArcReductions"/>
+              <xsl:with-param name="type"         select="'constraint'"/>
+            </xsl:call-template>
+          </xsl:if>
+        </div>
+       
+        <xsl:if test="/*/@ShortMode != 'true'">
+          <span>
+            <xsl:attribute name="id"><xsl:if test="$short='true'">s</xsl:if>_<xsl:value-of select="$address"/></xsl:attribute>
+            <table class="sessionSplit">
+              <tr>
+                <td>
+                  <xsl:call-template name="SetupTime">       <xsl:with-param name="pTag" select="$address"/><xsl:with-param name="short" select="$short"/></xsl:call-template>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <xsl:call-template name="HoldTime">        <xsl:with-param name="pTag" select="$address"/><xsl:with-param name="short" select="$short"/></xsl:call-template>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <xsl:call-template name="Metastability">   <xsl:with-param name="pTag" select="$address"/><xsl:with-param name="short" select="$short"/></xsl:call-template>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <xsl:call-template name="Recovery">        <xsl:with-param name="pTag" select="$address"/><xsl:with-param name="short" select="$short"/></xsl:call-template>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <xsl:call-template name="Removal">         <xsl:with-param name="pTag" select="$address"/><xsl:with-param name="short" select="$short"/></xsl:call-template>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <xsl:call-template name="RRMetastability"> <xsl:with-param name="pTag" select="$address"/><xsl:with-param name="short" select="$short"/></xsl:call-template>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <xsl:call-template name="MinPulseWidth">   <xsl:with-param name="pTag" select="$address"/><xsl:with-param name="short" select="$short"/></xsl:call-template>
+                </td>
+              </tr>
+            </table>
+          </span>
+        </xsl:if>
+      </a>
+    </xsl:if>
+  </xsl:template>
+  
+  <!-- Setup Time: [setup_falling or setup_rising] fall_constraint & rise_constraint -->
+  <xd:doc>Creates the Setup Time section. Calls the CreateCellTimingSessionSH template</xd:doc>
+  <xsl:template name="SetupTime">
+    <xsl:param name="pTag"/>
+    <xsl:param name="short">false</xsl:param>
+    <xsl:if test="Pins/Pin/TimingList/TimingEntry[@TimingType='setup_falling' or @TimingType='setup_rising'][fall_constraint|rise_constraint]">
+      <xsl:call-template name="CreateCellTimingSessionSH">
+        <xsl:with-param name="table_type_rise" select="'setup_rising'"/>
+        <xsl:with-param name="table_type_fall" select="'setup_falling'"/>
+        <xsl:with-param name="table_rise"      select="'rise_constraint'"/>
+        <xsl:with-param name="table_fall"      select="'fall_constraint'"/>
+        <xsl:with-param name="SecId"           select="'ST'"/>
+        <xsl:with-param name="has_summary"     select="$XmlLibrary/Library/TimingSummary/Entry[@Name='ST']"/>
+        <xsl:with-param name="short"           select="$short"/>
+        <xsl:with-param name="pTag"            select="$pTag"/>
+      </xsl:call-template>
+    </xsl:if>
+  </xsl:template>
+
+  <!-- Pushout: [setup_falling, setup_rising, recovery_rising or recovery_falling] fall_constraint_rel|abs_pushout & rise_constraint_rel|abs_pushout -->
+  <xd:doc>Creates the Pushout section. Calls the CreateCellTimingSessionSH template</xd:doc>
+  <xsl:template name="Pushout">
+    <xsl:param name="pTag"/>
+    <xsl:param name="short">false</xsl:param>
+    <xsl:if test="Pins/Pin/TimingList/TimingEntry[fall_constraint_delay_rel_pushout|rise_constraint_delay_rel_pushout]">
+      <xsl:call-template name="CreatePushoutSession">
+        <xsl:with-param name="table_rise_rel"     select="'rise_constraint_delay_rel_pushout'"/>
+        <xsl:with-param name="table_rise_abs"     select="'rise_constraint_delay_abs_pushout'"/>
+        <xsl:with-param name="table_fall_rel"     select="'fall_constraint_delay_rel_pushout'"/>
+        <xsl:with-param name="table_fall_abs"     select="'fall_constraint_delay_abs_pushout'"/>
+        <xsl:with-param name="table_dep_rise_rel" select="'rise_constraint_dependent_delay_rel_pushout'"/>
+        <xsl:with-param name="table_dep_rise_abs" select="'rise_constraint_dependent_delay_abs_pushout'"/>
+        <xsl:with-param name="table_dep_fall_rel" select="'fall_constraint_dependent_delay_rel_pushout'"/>
+        <xsl:with-param name="table_dep_fall_abs" select="'fall_constraint_dependent_delay_abs_pushout'"/>
+        <xsl:with-param name="SecId"              select="'DPO'"/>
+        <xsl:with-param name="has_summary"        select="$XmlLibrary/Library/ConstrValidSummary"/>
+        <xsl:with-param name="short"              select="$short"/>
+        <xsl:with-param name="pTag"               select="$pTag"/>
+      </xsl:call-template>
+    </xsl:if>
+    <xsl:if test="Pins/Pin/TimingList/TimingEntry[fall_constraint_tran_rel_pushout|rise_constraint_tran_rel_pushout]">
+      <xsl:call-template name="CreatePushoutSession">
+        <xsl:with-param name="table_rise_rel"     select="'rise_constraint_tran_rel_pushout'"/>
+        <xsl:with-param name="table_rise_abs"     select="'rise_constraint_tran_abs_pushout'"/>
+        <xsl:with-param name="table_fall_rel"     select="'fall_constraint_tran_rel_pushout'"/>
+        <xsl:with-param name="table_fall_abs"     select="'fall_constraint_tran_abs_pushout'"/>
+        <xsl:with-param name="table_dep_rise_rel" select="'rise_constraint_dependent_tran_rel_pushout'"/>
+        <xsl:with-param name="table_dep_rise_abs" select="'rise_constraint_dependent_tran_abs_pushout'"/>
+        <xsl:with-param name="table_dep_fall_rel" select="'fall_constraint_dependent_tran_rel_pushout'"/>
+        <xsl:with-param name="table_dep_fall_abs" select="'fall_constraint_dependent_tran_abs_pushout'"/>
+        <xsl:with-param name="SecId"              select="'TPO'"/>
+        <xsl:with-param name="has_summary"        select="$XmlLibrary/Library/ConstrValidSummary"/>
+        <xsl:with-param name="short"              select="$short"/>
+        <xsl:with-param name="pTag"               select="$pTag"/>
+      </xsl:call-template>
+    </xsl:if>
+    <xsl:if test="Pins/Pin/TimingList/TimingEntry[rise_constraint_ripple_rel_pushout|fall_constraint_ripple_rel_pushout]">
+      <xsl:call-template name="CreatePushoutSession">
+        <xsl:with-param name="table_rise_rel"     select="'rise_constraint_ripple_rel_pushout'"/>
+        <xsl:with-param name="table_rise_abs"     select="''"/>
+        <xsl:with-param name="table_fall_rel"     select="'fall_constraint_ripple_rel_pushout'"/>
+        <xsl:with-param name="table_fall_abs"     select="''"/>
+        <xsl:with-param name="table_dep_rise_rel" select="'rise_constraint_dependent_ripple_rel_pushout'"/>
+        <xsl:with-param name="table_dep_rise_abs" select="''"/>
+        <xsl:with-param name="table_dep_fall_rel" select="'fall_constraint_dependent_ripple_rel_pushout'"/>
+        <xsl:with-param name="table_dep_fall_abs" select="''"/>
+        <xsl:with-param name="SecId"              select="'GP'"/>
+        <xsl:with-param name="has_summary"        select="$XmlLibrary/Library/ConstrValidSummary"/>
+        <xsl:with-param name="short"              select="$short"/>
+        <xsl:with-param name="pTag"               select="$pTag"/>
+      </xsl:call-template>
+    </xsl:if>
+  </xsl:template>
+ 
+  <!-- Hold Time: [hold_falling] fall_constraint & rise_constraint -->
+  <xd:doc>Creates the Hold Time section. Calls the CreateCellTimingSessionSH template</xd:doc>
+  <xsl:template name="HoldTime">
+    <xsl:param name="pTag"/>
+    <xsl:param name="short">false</xsl:param>
+    <xsl:if test="Pins/Pin/TimingList/TimingEntry[@TimingType='hold_falling' or @TimingType='hold_rising'][rise_constraint|fall_constraint]">
+      <xsl:call-template name="CreateCellTimingSessionSH">
+        <xsl:with-param name="table_type_rise" select="'hold_rising'"/>
+        <xsl:with-param name="table_type_fall" select="'hold_falling'"/>
+        <xsl:with-param name="table_rise"      select="'rise_constraint'"/>
+        <xsl:with-param name="table_fall"      select="'fall_constraint'"/>
+        <xsl:with-param name="SecId"           select="'HT'"/>
+        <xsl:with-param name="has_summary"     select="$XmlLibrary/Library/TimingSummary/Entry[@Name='HT']"/>
+        <xsl:with-param name="short"           select="$short"/>
+        <xsl:with-param name="pTag"            select="$pTag"/>
+      </xsl:call-template>
+    </xsl:if>
+  </xsl:template>
+  
+  <!-- Setup/Hold Metastability Window -->
+  <xd:doc>Creates the Setup/Hold Metastability Window table. Calls the CreateSecBasics template</xd:doc>
+  <xsl:template name="Metastability">
+    <xsl:param name="pTag"/>
+    <xsl:param name="short">false</xsl:param>
+    <xsl:param name="SecId" select="'MS'"/>
+    <xsl:param name="SecTitle">
+      <xsl:call-template name="Map">
+        <xsl:with-param name="key" select="concat($SecId,'_Title')"/>
+      </xsl:call-template>
+    </xsl:param>
+    <xsl:param name="SecTag">
+      <xsl:call-template name="Map">
+        <xsl:with-param name="key" select="concat($SecId, '_Tag')"/>
+      </xsl:call-template>
+    </xsl:param>
+
+    <xsl:variable name="CornerName" select="/Cell/@CornerName"/>
+    <xsl:variable name="has_summary"      select="$XmlLibrary/Library/TimingSummary/Entry[@Name='MS']"/>
+
+    <xsl:if test="Pins/Pin/TimingList/TimingEntry[@TimingType='hold_falling' or @TimingType='hold_rising'][MetastabilityWindowSHHigh|MetastabilityWindowSHLow]">
+      <xsl:call-template name="CreateSecBasics">
+        <xsl:with-param name="SecId" select="'MS'"/>
+        <xsl:with-param name="short" select="$short"/>
+        <xsl:with-param name="pTag"  select="$pTag"/>
+        <xsl:with-param name="internal">
+          <xsl:if test="$has_summary">
+            <table><tr><td>
+              <a>
+                <xsl:attribute name="href">
+                  <xsl:choose>
+                    <xsl:when test="$Config/@doctype='PDF'">
+                      <xsl:variable name="SumSecTitle">
+                        <xsl:call-template name="Map">
+                          <xsl:with-param name="map" select="$MapNode/summary"/>
+                          <xsl:with-param name="key" select="concat($SecId,'_Title')"/>
+                        </xsl:call-template>
+                      </xsl:variable>
+                      <xsl:value-of select="concat('@', $SumSecTitle, ' [', $CornerName,']')"/>
+                    </xsl:when>
+                    <xsl:otherwise>
+                      <xsl:value-of select="concat('../', $SecTag,'_', $CornerName, $Extensions/Summary)"/>
+                    </xsl:otherwise>
+                  </xsl:choose>
+                </xsl:attribute>
+                <xsl:value-of select="$SecTitle"/> for All Cells
+              </a>
+            </td></tr></table>
+          </xsl:if>
+          <xsl:for-each select="Pins/Pin/TimingList/TimingEntry[@TimingType='hold_falling' or @TimingType='hold_rising']">
+            <xsl:call-template name="PrintTimingTable">
+              <xsl:with-param name="SecId"            select="'MS'"/>
+              <xsl:with-param name="table_rise"       select="MetastabilityWindowSHHigh"/>
+              <xsl:with-param name="table_fall"       select="MetastabilityWindowSHLow"/>
+              <xsl:with-param name="table_label_fall" select="'low '"/>
+              <xsl:with-param name="table_label_rise" select="'high '"/>
+              <xsl:with-param name="var1_label"       select="$unit/time"/>
+              <xsl:with-param name="var2_label"       select="$unit/time"/>
+              <xsl:with-param name="unit_label"       select="$timLabel"/>
+            </xsl:call-template>
+          </xsl:for-each>
+        </xsl:with-param>
+      </xsl:call-template>
+    </xsl:if>
+  </xsl:template> 
+  
+  <xd:doc>Creates the Recovery Time section. Calls the CreateCellTimingSessionSH template</xd:doc>
+  <xsl:template name="Recovery">
+    <xsl:param name="pTag"/>
+    <xsl:param name="short">false</xsl:param>
+    <xsl:if test="Pins/Pin/TimingList/TimingEntry[@TimingType='recovery_falling' or @TimingType='recovery_rising'][fall_constraint|rise_constraint]">
+      <xsl:call-template name="CreateCellTimingSessionSH">
+        <xsl:with-param name="table_type_rise" select="'recovery_rising'"/>
+        <xsl:with-param name="table_type_fall" select="'recovery_falling'"/>
+        <xsl:with-param name="table_rise"      select="'rise_constraint'"/>
+        <xsl:with-param name="table_fall"      select="'fall_constraint'"/>
+        <xsl:with-param name="SecId"           select="'RC'"/>
+        <xsl:with-param name="has_summary"     select="$XmlLibrary/Library/TimingSummary/Entry[@Name='RC']"/>
+        <xsl:with-param name="short"           select="$short"/>
+        <xsl:with-param name="pTag"            select="$pTag"/>
+      </xsl:call-template>
+    </xsl:if>
+  </xsl:template>
+  
+  <xd:doc>Creates the Removal Time section. Calls the CreateCellTimingSessionSH template</xd:doc>
+  <xsl:template name="Removal">
+    <xsl:param name="pTag"/>
+    <xsl:param name="short">false</xsl:param>
+    <xsl:if test="Pins/Pin/TimingList/TimingEntry[@TimingType='removal_falling' or @TimingType='removal_rising'][rise_constraint|fall_constraint]">
+      <xsl:call-template name="CreateCellTimingSessionSH">
+        <xsl:with-param name="table_type_rise" select="'removal_rising'"/>
+        <xsl:with-param name="table_type_fall" select="'removal_falling'"/>
+        <xsl:with-param name="table_rise"      select="'rise_constraint'"/>
+        <xsl:with-param name="table_fall"      select="'fall_constraint'"/>
+        <xsl:with-param name="SecId"           select="'RM'"/>
+        <xsl:with-param name="has_summary"     select="$XmlLibrary/Library/TimingSummary/Entry[@Name='RM']"/>
+        <xsl:with-param name="short"           select="$short"/>
+        <xsl:with-param name="pTag"            select="$pTag"/>
+      </xsl:call-template>
+    </xsl:if>
+  </xsl:template>
+
+  <!-- Recovery Metastability Window -->
+  <xd:doc>Creates the Recovery/Removal Metastability Window table. Calls the CreateSecBasics template</xd:doc>
+  <xsl:template name="RRMetastability">
+    <xsl:param name="pTag"/>
+    <xsl:param name="short">false</xsl:param>
+
+    <xsl:variable name="CornerName" select="/Cell/@CornerName"/>
+    <xsl:variable name="has_summary" select="$XmlLibrary/Library/TimingSummary/Entry[@Name='RRMS']"/>
+    <xsl:variable name="SecTag">
+      <xsl:call-template name="Map">
+        <xsl:with-param name="key" select="concat('RRMS', '_Tag')"/>
+      </xsl:call-template>
+    </xsl:variable>
+    <xsl:variable name="SecTitle">
+      <xsl:call-template name="Map">
+        <xsl:with-param name="key" select="concat('RRMS','_Title')"/>
+      </xsl:call-template>
+    </xsl:variable>
+
+    <xsl:if test="Pins/Pin[RecoveryRemovalHigh|RecoveryRemovalLow]">
+      <xsl:call-template name="CreateSecBasics">
+        <xsl:with-param name="SecId" select="'RRMS'"/>
+        <xsl:with-param name="short" select="$short"/>
+        <xsl:with-param name="pTag"  select="$pTag"/>
+        <xsl:with-param name="internal">
+
+          <xsl:if test="$has_summary">
+            <table><tr><td>
+              <a>
+                <xsl:attribute name="href">
+                  <xsl:value-of select="concat('../', $SecTag,'_', $CornerName, $Extensions/Summary)"/>
+                </xsl:attribute>
+                <xsl:value-of select="$SecTitle"/> for All Cells
+              </a>
+            </td></tr></table>
+          </xsl:if>
+
+          <xsl:for-each select="Pins/Pin">
+            <xsl:call-template name="PrintTimingTable">
+              <xsl:with-param name="SecId"            select="'RRMS'"/>
+              <xsl:with-param name="table_rise"       select="RecoveryRemovalHigh"/>
+              <xsl:with-param name="table_fall"       select="RecoveryRemovalLow"/>
+              <xsl:with-param name="table_label_fall" select="'low '"/>
+              <xsl:with-param name="table_label_rise" select="'high '"/>
+              <xsl:with-param name="var1_label"       select="$unit/time"/>
+              <xsl:with-param name="var2_label"       select="$unit/time"/>
+              <xsl:with-param name="unit_label"       select="$timLabel"/>
+            </xsl:call-template>
+          </xsl:for-each>
+        </xsl:with-param>
+      </xsl:call-template>
+    </xsl:if>
+  </xsl:template>
+
+  <xd:doc>Creates the Minimum Pulse Width section. Calls the CreateCellTimingSessionSH template</xd:doc>
+  <xsl:template name="MinPulseWidth">
+    <xsl:param name="pTag"/>
+    <xsl:param name="short">false</xsl:param>
+
+    <xsl:if test="Pins/Pin/TimingList/TimingEntry[@TimingType='min_pulse_width'][rise_constraint|fall_constraint]">
+      <xsl:call-template name="CreateCellTimingSessionSH">
+        <xsl:with-param name="table_type_rise" select="'min_pulse_width'"/>
+        <xsl:with-param name="table_type_fall" select="'min_pulse_width'"/>
+        <xsl:with-param name="table_rise"      select="'rise_constraint'"/>
+        <xsl:with-param name="table_fall"      select="'fall_constraint'"/>
+        <xsl:with-param name="SecId"           select="'MPW'"/>
+        <xsl:with-param name="has_summary"     select="$XmlLibrary/Library/TimingSummary/Entry[@Name='MPW']"/>
+        <xsl:with-param name="short"           select="$short"/>
+        <xsl:with-param name="pTag"            select="$pTag"/>
+      </xsl:call-template>
+    </xsl:if>
+
+    <xsl:if test="Pins/Pin/min_pulse_width_low|Pins/Pin/min_pulse_width_high">
+      <xsl:variable name="address">MinPulseWidth</xsl:variable>
+      <xsl:variable name="SecId"  select="'MP'"/>
+      <xsl:variable name="Legend">
+        <xsl:call-template name="Map">
+          <xsl:with-param name="key" select="concat($SecId, '_Legend')"/>
+        </xsl:call-template>
+      </xsl:variable>
+      <a>
+        <xsl:attribute name="name"><xsl:if test="$short='true'">s</xsl:if><xsl:value-of select="$address"/></xsl:attribute>
+        <xsl:if test="not(Pins/Pin/TimingList/TimingEntry[@TimingType='min_pulse_width'][rise_constraint|fall_constraint])">
+          <div id="screen-only" name="screen-only">
+            <xsl:call-template name="CreateCollapse">
+              <xsl:with-param name="name">Minimum Pulse Width</xsl:with-param>
+              <xsl:with-param name="tag" select="$address"/>
+              <xsl:with-param name="short" select="$short"/>
+              <xsl:with-param name="parentTag" select="$pTag"/>
+              <xsl:with-param name="hide">false</xsl:with-param>
+              <xsl:with-param name="dir">..</xsl:with-param>
+              <xsl:with-param name="legend" select="concat($Legend, $LegSuffix)"/>
+            </xsl:call-template>
+          </div>
+        </xsl:if>
+
+        <xsl:if test="$short='false'">
+          <span hide="false">
+            <xsl:attribute name="id">_<xsl:value-of select="$address"/></xsl:attribute>
+            <div>
+              <xsl:attribute name="ngTable">minPW</xsl:attribute>
+              <xsl:attribute name="minPW"><xsl:value-of select="$timLabel"/></xsl:attribute>
+              <xsl:variable name="entries">
+                <xsl:for-each select="Pins/Pin">
+                  <xsl:if test="min_pulse_width_low">
+                    <xsl:value-of select="@Name"/>;low;
+                    <xsl:call-template name="FormatUnit">
+                      <xsl:with-param name="value" select="min_pulse_width_low"/>
+                    </xsl:call-template>
+                    <xsl:if test="min_pulse_width_low/@tolExceeded='down'">d</xsl:if><xsl:if test="min_pulse_width_low/@tolExceeded='up'">u</xsl:if>;$
+                  </xsl:if>
+                  <xsl:if test="min_pulse_width_high">
+                    <xsl:value-of select="@Name"/>;high;
+                    <xsl:call-template name="FormatUnit">
+                      <xsl:with-param name="value" select="min_pulse_width_high"/>
+                    </xsl:call-template>
+                    <xsl:if test="min_pulse_width_high/@tolExceeded='down'">d</xsl:if><xsl:if test="min_pulse_width_high/@tolExceeded='up'">u</xsl:if>;$
+                  </xsl:if>
+                </xsl:for-each>
+              </xsl:variable>
+              <xsl:attribute name="entries"><xsl:value-of select="translate(normalize-space($entries),' ','')"/></xsl:attribute>
+            </div>
+          </span>
+        </xsl:if>
+      </a>
+    </xsl:if>
+  </xsl:template>
+
+
+  <xd:doc>
+    Used to build the Setup/Hold and Recovery/Removal sections. Calls the CreateSecBasics and PrintTimingTable templates
+    <xd:param name="SecId" type="string">identifier for the section to be created</xd:param>
+    <xd:param name="table_rise" type="string">name of the XML element holding the rise table</xd:param>
+    <xd:param name="table_fall" type="string">name of the XML element holding the fall table</xd:param>
+    <xd:param name="table_type_rise" type="string">if it matches with the timing type attribute, the corresponding timing entry to be processed</xd:param>
+    <xd:param name="table_type_fall" type="string">if it matches with the timing type attribute, the corresponding timing entry to be processed</xd:param>\
+    <xd:param name="has_summary" type="element">acts as a boolean flag. If the pointed element exists, creates a link to the corresponding timing summary page</xd:param>
+    <xd:param name="short" type="boolean">true if it is a summary entry, false otherwise. Default value is <i>false</i></xd:param>
+    <xd:param name="pTag" type="string">address of the parent section</xd:param>
+  </xd:doc>
+  <xsl:template name="CreateCellTimingSessionSH">
+    <xsl:param name="SecId"/>
+    <xsl:param name="table_rise"/>
+    <xsl:param name="table_fall"/>
+    <xsl:param name="table_type_rise"/>
+    <xsl:param name="table_type_fall"/>
+    <xsl:param name="has_summary"/>
+    <xsl:param name="short">false</xsl:param>
+    <xsl:param name="pTag"/>
+    <xsl:param name="SecTitle">
+      <xsl:call-template name="Map">
+        <xsl:with-param name="key" select="concat($SecId,'_Title')"/>
+      </xsl:call-template>
+    </xsl:param>
+    <xsl:param name="SecTag">
+      <xsl:call-template name="Map">
+        <xsl:with-param name="key" select="concat($SecId, '_Tag')"/>
+      </xsl:call-template>
+    </xsl:param>
+
+    <xsl:variable name="CornerName" select="/Cell/@CornerName"/>
+    
+    <xsl:call-template name="CreateSecBasics">
+      <xsl:with-param name="SecId" select="$SecId"/>
+      <xsl:with-param name="short" select="$short"/>
+      <xsl:with-param name="pTag" select="$pTag"/>
+      <xsl:with-param name="internal">
+
+        <xsl:if test="$has_summary">
+          <table><tr><td>
+            <a>
+              <xsl:attribute name="href">
+                <xsl:choose>
+                  <xsl:when test="$Config/@doctype='PDF'">
+                    <xsl:variable name="SumSecTitle">
+                      <xsl:call-template name="Map">
+                        <xsl:with-param name="map" select="$MapNode/summary"/>
+                        <xsl:with-param name="key" select="concat($SecId,'_Title')"/>
+                      </xsl:call-template>
+                    </xsl:variable>
+                    <xsl:value-of select="concat('@', $SumSecTitle, ' [', $CornerName,']')"/>
+                  </xsl:when>
+                  <xsl:otherwise>
+                    <xsl:value-of select="concat('../', $SecTag,'_', $CornerName, $Extensions/Summary)"/>
+                  </xsl:otherwise>
+                </xsl:choose>
+              </xsl:attribute>
+              <xsl:value-of select="$SecTitle"/> for All Cells
+            </a>
+          </td></tr></table>
+        </xsl:if>
+
+        <hr class="Title"/>
+        <xsl:for-each select="Pins/Pin/TimingList/TimingEntry[@TimingType=$table_type_rise or @TimingType=$table_type_fall]">
+          <xsl:call-template name="PrintTimingTable">
+            <xsl:with-param name="SecId"      select="$SecId"/>
+            <xsl:with-param name="table_fall" select="*[name()=$table_fall]"/>
+            <xsl:with-param name="table_rise" select="*[name()=$table_rise]"/>
+            <xsl:with-param name="var1_label"    select="$unit/time"/>
+            <xsl:with-param name="var2_label"    select="$unit/time"/>
+            <xsl:with-param name="unit_label"    select="$timLabel"/>
+          </xsl:call-template>
+        </xsl:for-each>
+      </xsl:with-param>
+    </xsl:call-template>
+    
+  </xsl:template>
+
+
+  <!-- Print capacitance, leakage and constraints summary tables for pdf databook -->
+  <xsl:template name="PDFArcRedTables">
+    <br/>
+    <div class="no-page-break">
+      <table class="reduced">
+        <tr>
+          <xsl:if test="ArcReductions/ConstraintEntry">
+            <td valign="top">
+              <xsl:call-template name="PrintArcRedTable">
+                <xsl:with-param name="arcRedNode"   select="./ArcReductions"/>
+                <xsl:with-param name="type"         select="'constraint'"/>
+              </xsl:call-template>
+            </td>
+            <td width="10%"></td> 
+          </xsl:if>
+          <xsl:if test="Pins/Pin/capacitance">
+            <td valign="top">
+              <xsl:call-template name="PrintArcRedTable">
+                <xsl:with-param name="arcRedNode"   select="./Pins"/>
+                <xsl:with-param name="type"         select="'cap'"/>
+              </xsl:call-template>
+            </td>
+            <td width="10%"></td> 
+          </xsl:if>
+          <xsl:if test="cell_leakage_power"> <!--  | min_leakage | max_leakage -->
+            <td valign="top">
+              <xsl:call-template name="PrintArcRedTable">
+                <xsl:with-param name="arcRedNode"   select="./ArcReductions"/>
+                <xsl:with-param name="type"         select="'leakage'"/>
+              </xsl:call-template>
+            </td>
+          </xsl:if>
+        </tr>
+      </table>
+    </div>
+    <br/>
+  </xsl:template>
+
+
+  <!-- Power Consumption -->
+  <xd:doc>Shows the power consumption of the cell</xd:doc>
+  <xsl:template name="Power">
+    <xsl:param name="short">false</xsl:param>
+    <xsl:if test="cell_leakage_power | LeakagePowerList |
+                  LeakageCurrList | ParasiticsList |
+                  Pins/Pin/HiddenPowerList/HiddenPowerEntry |
+                  Pins/Pin/InternalPowerList/InternalPowerEntry[rise_power|fall_power|power|full_cycle_power|total_power_fall|total_power_rise|total_power|total_full_cycle_power]">
+      <!-- | min_leakage | max_leakage -->
+      <xsl:variable name="address">Power</xsl:variable>
+      <a>
+        <xsl:attribute name="name"><xsl:if test="$short='true'">s</xsl:if><xsl:value-of select="$address"/></xsl:attribute>
+
+        <div id="screen-only" name="screen-only">
+          <xsl:call-template name="CreateCollapse">
+            <xsl:with-param name="name" select="$address"/>
+            <xsl:with-param name="tag" select="$address"/>
+            <xsl:with-param name="short" select="$short"/>
+            <xsl:with-param name="dir">..</xsl:with-param>
+          </xsl:call-template>
+        </div>
+
+        <xsl:if test="$short='true'">
+          <div id="screen-only" name="screen-only">
+            <xsl:if test="cell_leakage_power"> <!-- | min_leakage | max_leakage"> -->
+              <xsl:call-template name="PrintArcRedTable">
+                <xsl:with-param name="arcRedNode"   select="./ArcReductions"/>
+                <xsl:with-param name="type"         select="'leakage'"/>
+              </xsl:call-template>
+            </xsl:if>
+          </div>
+          <div class="no-page-break">
+            <xsl:call-template name="PrintArcRedTable">
+              <xsl:with-param name="arcRedNode"   select="./ArcReductions"/>
+              <xsl:with-param name="type"         select="'power'"/>
+            </xsl:call-template>
+          </div>
+        </xsl:if>
+
+        <xsl:if test="/*/@ShortMode != 'true'">
+          <span>
+            <xsl:attribute name="id"><xsl:if test="$short='true'">s</xsl:if>_<xsl:value-of select="$address"/></xsl:attribute>
+            <table>
+              <tr>
+                <td>
+                  <xsl:call-template name="PowerConsumption">          <xsl:with-param name="pTag" select="$address"/><xsl:with-param name="short" select="$short"/></xsl:call-template>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <xsl:call-template name="LeakageCurrent">            <xsl:with-param name="pTag" select="$address"/><xsl:with-param name="short" select="$short"/></xsl:call-template>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <xsl:call-template name="CcsParasitics">             <xsl:with-param name="pTag" select="$address"/><xsl:with-param name="short" select="$short"/></xsl:call-template>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <xsl:call-template name="DynamicPowerConsumption">   <xsl:with-param name="pTag" select="$address"/><xsl:with-param name="short" select="$short"/></xsl:call-template>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <xsl:call-template name="FullCyclePowerConsumption"> <xsl:with-param name="pTag" select="$address"/><xsl:with-param name="short" select="$short"/></xsl:call-template>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <xsl:call-template name="TotalPowerConsumption">     <xsl:with-param name="pTag" select="$address"/><xsl:with-param name="short" select="$short"/></xsl:call-template>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <xsl:call-template name="TotalFullCyclePowerConsumption"> <xsl:with-param name="pTag" select="$address"/><xsl:with-param name="short" select="$short"/></xsl:call-template>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <xsl:call-template name="HiddenPowerConsumption">    <xsl:with-param name="pTag" select="$address"/><xsl:with-param name="short" select="$short"/></xsl:call-template>
+                </td>
+              </tr>
+            </table>
+          </span>
+        </xsl:if>
+      </a>
+    </xsl:if>
+  </xsl:template>
+  
+  
+  <!-- Static Power Consumption -->
+  <xd:doc>Shows the static power consumption of the cell</xd:doc>
+  <xsl:template name="PowerConsumption">
+    <xsl:param name="pTag"/>
+    <xsl:param name="short">false</xsl:param>
+    
+    <xsl:if test="cell_leakage_power | LeakagePowerList"> <!-- | min_leakage | max_leakage -->
+      <xsl:variable name="SecId"  select="$SP"/>
+      <xsl:variable name="SecTitle">
+        <xsl:call-template name="Map">
+          <xsl:with-param name="key" select="concat($SecId,'_Title')"/>
+        </xsl:call-template>
+      </xsl:variable>
+      <xsl:variable name="SecTag">
+        <xsl:call-template name="Map">
+          <xsl:with-param name="key" select="concat($SecId, '_Tag')"/>
+        </xsl:call-template>
+      </xsl:variable>
+      <xsl:variable name="Legend">
+        <xsl:call-template name="Map">
+          <xsl:with-param name="key" select="concat($SecId, '_Legend')"/>
+        </xsl:call-template>
+      </xsl:variable>
+
+      <a>   
+        <xsl:attribute name="name"><xsl:if test="$short='true'">s</xsl:if><xsl:value-of select="$SecTag"/></xsl:attribute>
+        <div id="screen-only" name="screen-only">
+          <xsl:call-template name="CreateCollapse">
+            <xsl:with-param name="name"  select="$SecTitle"/>
+            <xsl:with-param name="tag"   select="$SecTag"/>
+            <xsl:with-param name="short" select="$short"/>
+            <xsl:with-param name="parentTag" select="$pTag"/>
+            <xsl:with-param name="dir">..</xsl:with-param>
+            <xsl:with-param name="legend" select="concat($Legend, $LegSuffix)"/>
+          </xsl:call-template>
+        </div>
+
+        <xsl:if test="$short='false'">
+          <span>  
+            <xsl:attribute name="id">
+              <xsl:value-of select="concat('_',$SecTag)"/>
+            </xsl:attribute>
+            <xsl:attribute name="hide">false</xsl:attribute>
+
+            <xsl:if test="$XmlLibrary/Library/PowerSummary/Entry[@Name='SP'] or $LibMode != 'normal'">
+              <table><tr><td>
+                <xsl:if test="$XmlLibrary/Library/PowerSummary/Entry[@Name='SP']">
+                  <a>
+                    <xsl:attribute name="href">
+                      <xsl:value-of select="concat('../', $SecTag,'_', /Cell/@CornerName, $Extensions/Summary)"/>
+                    </xsl:attribute>
+                    <xsl:value-of select="$SecTitle"/> for All Cells
+                  </a>
+                </xsl:if>
+                <xsl:if test="$XmlLibrary/Library/PowerSummary/Entry[@Name='SP'] and $LibMode != 'normal'">
+                  <xsl:text>&#160;&#160;|&#160;&#160;</xsl:text>
+                </xsl:if>
+                <xsl:if test="$LibMode != 'normal'">
+                  <xsl:call-template name="CreateRefTrg">
+                    <xsl:with-param name="address1" select="concat('#', $SecTag)"/>
+                    <xsl:with-param name="address2" select="concat('#', $SecTag)"/>
+                  </xsl:call-template>
+                </xsl:if>
+              </td></tr></table>
+            </xsl:if>
+            
+            <xsl:if test ="cell_leakage_power"> <!-- | min_leakage | max_leakage -->
+              <hr class="Title"/>
+              <table border="1">               
+                <tr colspan="2">
+                  <th>Leakage <xsl:value-of select="$lpLabel"/></th>
+                </tr>
+                <xsl:if test="cell_leakage_power">
+                  <tr colspan="2">
+                    <xsl:call-template name="FillOneValue">
+                      <xsl:with-param name="Text">
+                        <xsl:call-template name="FormatUnit">
+                          <xsl:with-param name="value"     select="cell_leakage_power"/>
+                        </xsl:call-template>
+                      </xsl:with-param>            
+                    </xsl:call-template>
+                  </tr>
+                </xsl:if>
+              </table>
+            </xsl:if>   
+            
+            <xsl:if test="LeakagePowerList/LeakagePower">
+              <div>
+                <xsl:attribute name="ngTable">leakGrp</xsl:attribute>
+                <xsl:attribute name="leakGrp"><xsl:value-of select="count(LeakagePowerList/LeakagePower)"/></xsl:attribute>
+                <xsl:variable name="writeWhen">
+                  <xsl:value-of select="LeakagePowerList/@when"/>
+                </xsl:variable>
+                <xsl:variable name="writePwrLevel">
+                  <xsl:value-of select="LeakagePowerList/@pwrLevel"/>
+                </xsl:variable>
+                <xsl:variable name="writePgPin">
+                  <xsl:value-of select="LeakagePowerList/@pgPin"/>
+                </xsl:variable>
+                <xsl:variable name="leakHeader">
+                  <xsl:if test="$writeWhen = 'yes'">When;</xsl:if>
+                  <xsl:if test="$writePwrLevel = 'yes'">Power Level;</xsl:if>
+                  <xsl:if test="$writePgPin = 'yes'">Related Pg Pin;</xsl:if>Leakage <xsl:value-of select="$lpLabel"/><xsl:text>;</xsl:text>
+                </xsl:variable>
+                <xsl:attribute name="lTitles"><xsl:value-of select="$leakHeader"/></xsl:attribute>
+                <xsl:variable name="entries">
+                  <xsl:for-each select="LeakagePowerList/LeakagePower">
+                    <xsl:if test="$writeWhen='yes'">
+                      <xsl:variable name="whenCond" select="normalize-space(translate(when, '&quot;()', ''))"/>
+                      <xsl:value-of select="$whenCond"/>$
+                    </xsl:if>
+                    <xsl:if test="$writePwrLevel='yes'">
+                      <xsl:variable name="pwrLevel" select="normalize-space(translate(power_level, '&quot;', ''))"/>
+                      <xsl:choose>
+                        <xsl:when test="$pwrLevel=''">-</xsl:when>
+                        <xsl:when test="$pwrLevel='MATCH'">
+                          <xsl:value-of select="normalize-space(translate(power_level/@Ref, '&quot;', ''))"/>
+                        </xsl:when>
+                        <xsl:otherwise>
+                          <xsl:value-of select="$pwrLevel"/>
+                        </xsl:otherwise>
+                      </xsl:choose>$
+                    </xsl:if>
+                    <xsl:if test="$writePgPin='yes'">
+                      <xsl:variable name="pgPin" select="normalize-space(translate(related_pg_pin, '&quot;', ''))"/>
+                      <xsl:choose>
+                        <xsl:when test="$pgPin=''">-</xsl:when>
+                        <xsl:when test="$pgPin='MATCH'">
+                          <xsl:value-of select="normalize-space(translate(related_pg_pin/@Ref, '&quot;', ''))"/>
+                        </xsl:when>
+                        <xsl:otherwise>
+                          <xsl:value-of select="$pgPin"/>
+                        </xsl:otherwise>
+                      </xsl:choose>$
+                    </xsl:if>
+                    <xsl:call-template name="FormatUnit">
+                      <xsl:with-param name="value" select="value"/>
+                    </xsl:call-template><xsl:if test="value/@interp='yes'">i</xsl:if><xsl:if test="value/@tolExceeded='down'">d</xsl:if><xsl:if test="value/@tolExceeded='up'">u</xsl:if>$#
+                  </xsl:for-each>
+                </xsl:variable>
+                <xsl:attribute name="entries"><xsl:value-of select="normalize-space($entries)"/></xsl:attribute>
+              </div>             
+            </xsl:if>
+          </span>        
+        </xsl:if>
+      </a>
+    </xsl:if>
+  </xsl:template>
+
+  <!-- CCS Leakage Currents -->
+  <xd:doc>Shows the leakage current values of the cell</xd:doc>
+  <xsl:template name="LeakageCurrent">
+    <xsl:param name="pTag"/>
+    <xsl:param name="short">false</xsl:param>
+    
+    <xsl:if test="LeakageCurrList">
+      <xsl:variable name="SecId"  select="$LC"/>
+      <xsl:variable name="SecTitle">
+        <xsl:call-template name="Map">
+          <xsl:with-param name="key" select="concat($SecId,'_Title')"/>
+        </xsl:call-template>
+      </xsl:variable>
+      <xsl:variable name="SecTag">
+        <xsl:call-template name="Map">
+          <xsl:with-param name="key" select="concat($SecId, '_Tag')"/>
+        </xsl:call-template>
+      </xsl:variable>
+      <xsl:variable name="Legend">
+        <xsl:call-template name="Map">
+          <xsl:with-param name="key" select="concat($SecId, '_Legend')"/>
+        </xsl:call-template>
+      </xsl:variable>
+
+      <a> 
+        <xsl:attribute name="name"><xsl:if test="$short='true'">s</xsl:if><xsl:value-of select="$SecTag"/></xsl:attribute>
+        <div id="screen-only" name="screen-only">
+          <xsl:call-template name="CreateCollapse">
+            <xsl:with-param name="name"  select="$SecTitle"/>
+            <xsl:with-param name="tag"   select="$SecTag"/>
+            <xsl:with-param name="short" select="$short"/>
+            <xsl:with-param name="parentTag" select="$pTag"/>
+            <xsl:with-param name="dir">..</xsl:with-param>
+            <xsl:with-param name="legend" select="concat($Legend, $LegSuffix)"/>
+          </xsl:call-template>
+        </div>
+
+        <xsl:if test="$short='false'">
+          <span>  
+            <xsl:attribute name="id">
+              <xsl:value-of select="concat('_',$SecTag)"/>
+            </xsl:attribute>
+            <xsl:attribute name="hide">false</xsl:attribute>
+
+            <xsl:if test="$XmlLibrary/Library/PowerSummary/Entry[@Name='LC'] or $LibMode != 'normal'">
+              <table><tr><td>
+                <xsl:if test="$XmlLibrary/Library/PowerSummary/Entry[@Name='LC']">
+                  <a>
+                    <xsl:attribute name="href">
+                      <xsl:value-of select="concat('../', $SecTag,'_', /Cell/@CornerName, $Extensions/Summary)"/>
+                    </xsl:attribute>
+                    <xsl:value-of select="$SecTitle"/> for All Cells
+                  </a>
+                </xsl:if>
+                <xsl:if test="$XmlLibrary/Library/PowerSummary/Entry[@Name='LC'] and $LibMode != 'normal'">
+                  <xsl:text>&#160;&#160;|&#160;&#160;</xsl:text>
+                </xsl:if>
+                <xsl:if test="$LibMode != 'normal'">
+                  <xsl:call-template name="CreateRefTrg">
+                    <xsl:with-param name="address1" select="concat('#', $SecTag)"/>
+                    <xsl:with-param name="address2" select="concat('#', $SecTag)"/>
+                  </xsl:call-template>
+                </xsl:if>
+              </td></tr></table>
+            </xsl:if>
+            
+            <div>
+              <xsl:attribute name="ngTable">leakCurrGrp</xsl:attribute>
+              <xsl:attribute name="grpUnit">
+                <xsl:choose>
+                  <xsl:when test="$LibMode = $DevMode"><xsl:value-of select="$unit/perc"/></xsl:when>
+                  <xsl:otherwise><xsl:value-of select="$unit/current"/></xsl:otherwise>
+                </xsl:choose>
+              </xsl:attribute>
+              <xsl:variable name="entries">
+                <xsl:for-each select="LeakageCurrList/LeakageCurr">
+                  <xsl:variable name="whenCond" select="normalize-space(translate(@when, '&quot;()', ''))"/>
+                  <xsl:value-of select="$whenCond"/>$
+                  <xsl:value-of select="@type"/>$
+                  <xsl:value-of select="@pin"/><xsl:if test="@extra"><xsl:text> </xsl:text><xsl:value-of select="@extra"/></xsl:if>$
+                  <xsl:value-of select="@value"/><xsl:if test="@tolExceeded='down'">d</xsl:if><xsl:if test="@tolExceeded='up'">u</xsl:if>$#
+                </xsl:for-each>
+              </xsl:variable>
+              <xsl:attribute name="entries"><xsl:value-of select="normalize-space($entries)"/></xsl:attribute>
+            </div>             
+          </span>        
+        </xsl:if>
+      </a>
+    </xsl:if>
+  </xsl:template>
+
+  <!-- CCS Parasitics -->
+  <xd:doc>Shows the leakage current values of the cell</xd:doc>
+  <xsl:template name="CcsParasitics">
+    <xsl:param name="pTag"/>
+    <xsl:param name="short">false</xsl:param>
+    
+    <xsl:if test="ParasiticsList">
+      <xsl:variable name="SecId"  select="$PAR"/>
+      <xsl:variable name="SecTitle">
+        <xsl:call-template name="Map">
+          <xsl:with-param name="key" select="concat($SecId,'_Title')"/>
+        </xsl:call-template>
+      </xsl:variable>
+      <xsl:variable name="SecTag">
+        <xsl:call-template name="Map">
+          <xsl:with-param name="key" select="concat($SecId, '_Tag')"/>
+        </xsl:call-template>
+      </xsl:variable>
+      <xsl:variable name="Legend">
+        <xsl:call-template name="Map">
+          <xsl:with-param name="key" select="concat($SecId, '_Legend')"/>
+        </xsl:call-template>
+      </xsl:variable>
+
+      <a> 
+        <xsl:attribute name="name"><xsl:if test="$short='true'">s</xsl:if><xsl:value-of select="$SecTag"/></xsl:attribute>
+        <div id="screen-only" name="screen-only">
+          <xsl:call-template name="CreateCollapse">
+            <xsl:with-param name="name"  select="$SecTitle"/>
+            <xsl:with-param name="tag"   select="$SecTag"/>
+            <xsl:with-param name="short" select="$short"/>
+            <xsl:with-param name="parentTag" select="$pTag"/>
+            <xsl:with-param name="dir">..</xsl:with-param>
+            <xsl:with-param name="legend" select="concat($Legend, $LegSuffix)"/>
+          </xsl:call-template>
+        </div>
+
+        <xsl:if test="$short='false'">
+          <span>  
+            <xsl:attribute name="id">
+              <xsl:value-of select="concat('_',$SecTag)"/>
+            </xsl:attribute>
+            <xsl:attribute name="hide">false</xsl:attribute>
+
+            <xsl:if test="$XmlLibrary/Library/PowerSummary/Entry[@Name='PAR'] or $LibMode != 'normal'">
+              <table><tr><td>
+                <xsl:if test="$XmlLibrary/Library/PowerSummary/Entry[@Name='PAR']">
+                  <a>
+                    <xsl:attribute name="href">
+                      <xsl:value-of select="concat('../', $SecTag,'_', /Cell/@CornerName, $Extensions/Summary)"/>
+                    </xsl:attribute>
+                    <xsl:value-of select="$SecTitle"/> for All Cells
+                  </a>
+                </xsl:if>
+                <xsl:if test="$XmlLibrary/Library/PowerSummary/Entry[@Name='PAR'] and $LibMode != 'normal'">
+                  <xsl:text>&#160;&#160;|&#160;&#160;</xsl:text>
+                </xsl:if>
+                <xsl:if test="$LibMode != 'normal'">
+                  <xsl:call-template name="CreateRefTrg">
+                    <xsl:with-param name="address1" select="concat('#', $SecTag)"/>
+                    <xsl:with-param name="address2" select="concat('#', $SecTag)"/>
+                  </xsl:call-template>
+                </xsl:if>
+              </td></tr></table>
+            </xsl:if>
+            
+            <div>
+              <xsl:attribute name="ngTable">parGrp</xsl:attribute>
+              <xsl:attribute name="grpUnit">
+                <xsl:choose>
+                  <xsl:when test="$LibMode = $DevMode"><xsl:value-of select="$unit/perc"/></xsl:when>
+                  <xsl:otherwise><xsl:value-of select="$unit/capacitance"/> | <xsl:value-of select="$unit/resist"/></xsl:otherwise>
+                </xsl:choose>
+              </xsl:attribute>
+              <xsl:variable name="entries">
+                <xsl:for-each select="ParasiticsList/Parasitic">
+                  <xsl:variable name="whenCond" select="normalize-space(translate(@when, '&quot;()', ''))"/>
+                  <xsl:value-of select="$whenCond"/>$
+                  <xsl:value-of select="@type"/>$
+                  <xsl:value-of select="@pin"/><xsl:if test="@extra"><xsl:text> </xsl:text><xsl:value-of select="@extra"/></xsl:if>$
+                  <xsl:value-of select="@value"/><xsl:if test="@tolExceeded='down'">d</xsl:if><xsl:if test="@tolExceeded='up'">u</xsl:if>$#
+                </xsl:for-each>
+              </xsl:variable>
+              <xsl:attribute name="entries"><xsl:value-of select="normalize-space($entries)"/></xsl:attribute>
+            </div>             
+          </span>        
+        </xsl:if>
+      </a>
+    </xsl:if>
+  </xsl:template>
+
+  <!-- Dynamic Power Consumption : cell_fall & cell_rise -->
+  <xd:doc>Creates the Dynamic Power Consumption section. Calls the CreateCellPowerSession template</xd:doc>
+  <xsl:template name="DynamicPowerConsumption">
+    <xsl:param name="pTag"/>
+    <xsl:param name="short">false</xsl:param>
+    <xsl:if test="Pins/Pin/InternalPowerList/InternalPowerEntry[rise_power|fall_power|power]">
+      <xsl:call-template name="CreateCellPowerSession">
+        <xsl:with-param name="table_rise"  select="'rise_power'"/>
+        <xsl:with-param name="table_fall"  select="'fall_power'"/>
+        <xsl:with-param name="table_pwr"   select="'power'"/>
+        <xsl:with-param name="SecId"       select="'DP'"/>
+        <xsl:with-param name="FPId"        select="'FP'"/>
+        <xsl:with-param name="RPId"        select="'RP'"/>
+        <xsl:with-param name="PWRId"       select="'PWR'"/>
+        <xsl:with-param name="fp_summary"  select="$XmlLibrary/Library/PowerSummary/Entry[@Name='FP']"/>
+        <xsl:with-param name="rp_summary"  select="$XmlLibrary/Library/PowerSummary/Entry[@Name='RP']"/>
+        <xsl:with-param name="fcp_summary" select="$XmlLibrary/Library/PowerSummary/Entry[@Name='PWR']"/>
+        <xsl:with-param name="short"       select="$short"/>
+        <xsl:with-param name="pTag"        select="$pTag"/>
+      </xsl:call-template>
+    </xsl:if>
+  </xsl:template>
+
+  <xd:doc>Creates the Full Cycle Power section. Calls the CreateCellPowerSession template</xd:doc>
+  <xsl:template name="FullCyclePowerConsumption">
+    <xsl:param name="pTag"/>
+    <xsl:param name="short">false</xsl:param>
+    <xsl:if test="Pins/Pin/InternalPowerList/InternalPowerEntry[full_cycle_power]">
+      <xsl:call-template name="CreateCellPowerSession">
+        <xsl:with-param name="table_rise"  select="''"/>
+        <xsl:with-param name="table_fall"  select="''"/>
+        <xsl:with-param name="table_pwr"   select="'full_cycle_power'"/>
+        <xsl:with-param name="SecId"       select="'FCP'"/>
+        <xsl:with-param name="FPId"        select="''"/>
+        <xsl:with-param name="RPId"        select="''"/>
+        <xsl:with-param name="PWRId"       select="'FCP'"/>
+        <xsl:with-param name="fp_summary"  select="''"/>
+        <xsl:with-param name="rp_summary"  select="''"/>
+        <xsl:with-param name="fcp_summary" select="$XmlLibrary/Library/PowerSummary/Entry[@Name='FCP']"/>
+        <xsl:with-param name="short"       select="$short"/>
+        <xsl:with-param name="pTag"        select="$pTag"/>
+      </xsl:call-template>
+    </xsl:if>
+  </xsl:template>
+
+  <xd:doc>Creates the Total Power section. Calls the CreateCellPowerSession template</xd:doc>
+  <xsl:template name="TotalPowerConsumption">
+    <xsl:param name="pTag"/>
+    <xsl:param name="short">false</xsl:param>
+    <xsl:if test="Pins/Pin/InternalPowerList/InternalPowerEntry[total_power_fall|total_power_rise|total_power]">
+      <xsl:call-template name="CreateCellPowerSession">
+        <xsl:with-param name="table_rise"  select="'total_power_rise'"/>
+        <xsl:with-param name="table_fall"  select="'total_power_fall'"/>
+        <xsl:with-param name="table_pwr"   select="'total_power'"/>
+        <xsl:with-param name="SecId"       select="'TP'"/>
+        <xsl:with-param name="FPId"        select="'TPF'"/>
+        <xsl:with-param name="RPId"        select="'TPR'"/>
+        <xsl:with-param name="PWRId"       select="'TP'"/>
+        <xsl:with-param name="fp_summary"  select="$XmlLibrary/Library/PowerSummary/Entry[@Name='TPF']"/>
+        <xsl:with-param name="rp_summary"  select="$XmlLibrary/Library/PowerSummary/Entry[@Name='TPR']"/>
+        <xsl:with-param name="fcp_summary" select="$XmlLibrary/Library/PowerSummary/Entry[@Name='TP']"/>
+        <xsl:with-param name="short"       select="$short"/>
+        <xsl:with-param name="pTag"        select="$pTag"/>
+      </xsl:call-template>
+    </xsl:if>
+  </xsl:template>  
+
+  <xd:doc>Creates the Total Full Cycle Power section. Calls the CreateCellPowerSession template</xd:doc>
+  <xsl:template name="TotalFullCyclePowerConsumption">
+    <xsl:param name="pTag"/>
+    <xsl:param name="short">false</xsl:param>
+    <xsl:if test="Pins/Pin/InternalPowerList/InternalPowerEntry[total_full_cycle_power]">
+      <xsl:call-template name="CreateCellPowerSession">
+        <xsl:with-param name="table_rise"  select="''"/>
+        <xsl:with-param name="table_fall"  select="''"/>
+        <xsl:with-param name="table_pwr"   select="'total_full_cycle_power'"/>
+        <xsl:with-param name="SecId"       select="'TFCP'"/>
+        <xsl:with-param name="FPId"        select="''"/>
+        <xsl:with-param name="RPId"        select="''"/>
+        <xsl:with-param name="PWRId"       select="'TFCP'"/>
+        <xsl:with-param name="fp_summary"  select="''"/>
+        <xsl:with-param name="rp_summary"  select="''"/>
+        <xsl:with-param name="fcp_summary" select="$XmlLibrary/Library/PowerSummary/Entry[@Name='TFCP']"/>
+        <xsl:with-param name="short"       select="$short"/>
+        <xsl:with-param name="pTag"        select="$pTag"/>
+      </xsl:call-template>
+    </xsl:if>
+  </xsl:template>
+
+  <!-- Hidden Power Consumption : fall_power rise_power and power -->
+  <xd:doc>Creates the Hidden Power Consumption section. Calls the CreateCellPowerSession template</xd:doc>
+  <xsl:template name="HiddenPowerConsumption">
+    <xsl:param name="pTag"/>
+    <xsl:param name="short">false</xsl:param>
+    <xsl:if test="Pins/Pin/HiddenPowerList">
+      <xsl:call-template name="CreateCellPowerSession">
+        <xsl:with-param name="table_rise"  select="'rise_power'"/>
+        <xsl:with-param name="table_fall"  select="'fall_power'"/>
+        <xsl:with-param name="table_pwr"   select="'power'"/>
+        <xsl:with-param name="SecId"       select="'HP'"/>
+        <xsl:with-param name="FPId"        select="'FP'"/>
+        <xsl:with-param name="RPId"        select="'RP'"/>
+        <xsl:with-param name="PWRId"       select="'PWR'"/>
+        <xsl:with-param name="hidden_pwr"  select="'y'"/>
+        <xsl:with-param name="short"       select="$short"/>
+        <xsl:with-param name="pTag"        select="$pTag"/>
+      </xsl:call-template>
+    </xsl:if>
+  </xsl:template>
+
+  <xd:doc>
+    Used to build the Dynamic Power Consumption section. Calls the CreateSecBasics, CreateCellPlotLink and PrintTimingTable templates
+    <xd:param name="SecId" type="string">identifier for the section to be created</xd:param>
+    <xd:param name="FPId" type="string">identifier for Fall Power section</xd:param>
+    <xd:param name="RPId" type="string">identifier for Rise Power section</xd:param>
+    <xd:param name="SecTitle" type="string">
+      <xd:short>title for the section to be created.</xd:short>
+      <xd:detail>Default value is extracted through the <i>Map</i> template</xd:detail>
+    </xd:param>
+    <xd:param name="FPTag" type="string">
+      <xd:short>tag for Fall Power section.</xd:short>
+      <xd:detail>Default value is extracted through the <i>Map</i> template</xd:detail>
+    </xd:param>
+    <xd:param name="RPTag" type="string">
+      <xd:short>tag for Rise Power section.</xd:short>
+      <xd:detail>Default value is extracted through the <i>Map</i> template</xd:detail>
+    </xd:param>
+    <xd:param name="PWRTag" type="string">
+      <xd:short>tag for Power/FCPower section.</xd:short>
+      <xd:detail>Default value is extracted through the <i>Map</i> template</xd:detail>
+    </xd:param>
+    <xd:param name="table_rise" type="string">name of the XML element holding the rise table</xd:param>
+    <xd:param name="table_fall" type="string">name of the XML element holding the fall table</xd:param>
+    <xd:param name="table_pwr" type="string">name of the XML element holding the power table</xd:param>
+    <xd:param name="ignore_v2" type="char">acts as a boolean flag which indicates if the second variable of the template should be ignored. Possible values are 'y' and 'n' (default)</xd:param>
+    <xd:param name="fp_summary" type="element">acts as a boolean flag. If the pointed element exists, creates a link to the corresponding fall power summary page</xd:param>
+    <xd:param name="fp_summary" type="element">acts as a boolean flag. If the pointed element exists, creates a link to the corresponding rise power summary page</xd:param>
+    <xd:param name="fcp_summary" type="element">acts as a boolean flag. If the pointed element exists, creates a link to the corresponding full-cycle power summary page</xd:param>
+    <xd:param name="hidden_pwr" type="element">selects between hidden and dynamic power. If set to 'y', then hidden power data is printed out</xd:param>
+    <xd:param name="short" type="boolean">true if it is a summary entry, false otherwise. Default value is <i>false</i>.</xd:param>
+    <xd:param name="pTag" type="string">address of the parent section</xd:param>
+  </xd:doc>
+  <xsl:template name="CreateCellPowerSession">
+    <xsl:param name="SecId"/>
+    <xsl:param name="FPId"/>
+    <xsl:param name="RPId"/>
+    <xsl:param name="PWRId"/>
+    <xsl:param name="SecTitle">
+      <xsl:call-template name="Map">
+        <xsl:with-param name="key" select="concat($SecId,'_Title')"/>
+      </xsl:call-template>
+    </xsl:param>
+    <xsl:param name="FPTag">
+      <xsl:call-template name="Map">
+        <xsl:with-param name="key" select="concat($FPId, '_Tag')"/>
+      </xsl:call-template>
+    </xsl:param>
+    <xsl:param name="RPTag">
+      <xsl:call-template name="Map">
+        <xsl:with-param name="key" select="concat($RPId, '_Tag')"/>
+      </xsl:call-template>
+    </xsl:param>
+    <xsl:param name="PWRTag">
+      <xsl:call-template name="Map">
+        <xsl:with-param name="key" select="concat($PWRId, '_Tag')"/>
+      </xsl:call-template>
+    </xsl:param>
+    <xsl:param name="table_rise"/>
+    <xsl:param name="table_fall"/>
+    <xsl:param name="table_pwr"/>
+    <xsl:param name="ignore_v2" select="'n'"/>
+    <xsl:param name="fp_summary" select="/*/hasALLSummary"/>
+    <xsl:param name="rp_summary" select="/*/hasALLSummary"/>
+    <xsl:param name="fcp_summary" select="/*/hasALLSummary"/>
+    <xsl:param name="hidden_pwr" select='n'/>
+    <xsl:param name="short">false</xsl:param>
+    <xsl:param name="pTag"/>
+    
+    <xsl:variable name="CornerName" select="/Cell/@CornerName"/>
+    
+    <xsl:call-template name="CreateSecBasics">
+      <xsl:with-param name="SecId" select="$SecId"/>
+      <xsl:with-param name="short" select="$short"/>
+      <xsl:with-param name="pTag" select="$pTag"/>
+      <xsl:with-param name="internal">
+        <xsl:if test="$fp_summary">
+          <table><tr><td>
+            <a>
+              <xsl:attribute name="href">
+                <xsl:value-of select="concat('../', $FPTag,'_', $CornerName, $Extensions/Summary)"/>
+              </xsl:attribute>
+              <xsl:value-of select="$SecTitle"/> (fall) for All Cells
+            </a>
+          </td></tr></table>
+        </xsl:if>
+        <xsl:if test="$rp_summary">
+          <table><tr><td>
+            <a>
+              <xsl:attribute name="href">
+                <xsl:value-of select="concat('../', $RPTag,'_', $CornerName, $Extensions/Summary)"/>
+              </xsl:attribute>
+              <xsl:value-of select="$SecTitle"/> (rise) for All Cells
+            </a>
+          </td></tr></table>
+        </xsl:if>
+        <xsl:if test="$fcp_summary">
+          <table><tr><td>
+            <a>
+              <xsl:attribute name="href">
+                <xsl:value-of select="concat('../', $PWRTag,'_', $CornerName, $Extensions/Summary)"/>
+              </xsl:attribute>
+              <xsl:value-of select="$SecTitle"/> for All Cells
+            </a>
+          </td></tr></table>
+        </xsl:if>
+        
+        <hr class="Title"/>
+        <xsl:variable name="searchListDynamic" select="Pins/Pin/InternalPowerList/InternalPowerEntry"/>
+
+        <xsl:choose>
+          <xsl:when test="$hidden_pwr = 'y'">
+            <xsl:for-each select="Pins/Pin">
+              <xsl:call-template name="PrintHiddenPwrAttrs">
+                <xsl:with-param name="var1_label" select="$unit/time"/>
+                <xsl:with-param name="unit_label" select="$hpLabel"/>
+              </xsl:call-template>
+            </xsl:for-each>
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:for-each select="$searchListDynamic">
+              <xsl:call-template name="PrintTimingTable">
+                <xsl:with-param name="SecId"      select="$SecId"/>
+                <xsl:with-param name="table_rise" select="*[name()=$table_rise]"/>
+                <xsl:with-param name="table_fall" select="*[name()=$table_fall]"/>
+                <xsl:with-param name="var1_label" select="$unit/time"/>
+                <xsl:with-param name="var2_label" select="$unit/capacitance"/>
+                <xsl:with-param name="var3_label" select="$unit/capacitance"/>
+                <xsl:with-param name="unit_label" select="$dpLabel"/>
+                <xsl:with-param name="ignore_v2"  select="$ignore_v2"/>
+              </xsl:call-template>
+            </xsl:for-each>
+            <xsl:for-each select="$searchListDynamic">
+              <xsl:call-template name="PrintTimingTable">
+                <xsl:with-param name="SecId"            select="$SecId"/>
+                <xsl:with-param name="table_rise"       select="*[name()=$table_pwr]"/>
+                <xsl:with-param name="table_label_rise" select="'power '"/>
+                <xsl:with-param name="table_fall"       select="null"/>
+                <xsl:with-param name="var1_label"       select="$unit/time"/>
+                <xsl:with-param name="var2_label"       select="$unit/capacitance"/>
+                <xsl:with-param name="var3_label"       select="$unit/capacitance"/>
+                <xsl:with-param name="unit_label"       select="$dpLabel"/>
+                <xsl:with-param name="ignore_v2"        select="$ignore_v2"/>
+              </xsl:call-template>
+            </xsl:for-each>
+          </xsl:otherwise>
+        </xsl:choose>
+      </xsl:with-param>
+    </xsl:call-template>
+  </xsl:template>
+  
+
+  <!-- CharEnv -->
+  <xd:doc>Creates the Characterization Environment section</xd:doc>
+  <xsl:template name="CharEnv">
+    <xsl:param name="short">false</xsl:param>
+
+    <xsl:variable name="address">Characterization Environment</xsl:variable>
+    <a>
+      <xsl:attribute name="name"><xsl:if test="$short='true'">s</xsl:if><xsl:value-of select="$address"/></xsl:attribute>
+      <div id="screen-only" name="screen-only">
+        <xsl:call-template name="CreateCollapse">
+          <xsl:with-param name="name" select="$address"/>
+          <xsl:with-param name="short" select="$short"/>
+          <xsl:with-param name="dir">..</xsl:with-param>
+        </xsl:call-template>
+      </div>
+
+      <xsl:if test="$short='false'">
+        <xsl:for-each select="CharEnvTable">
+          <xsl:call-template name="GenTableCharEnv"/>
+        </xsl:for-each>
+      </xsl:if>
+    </a>
+  </xsl:template>
+
+
+  <!-- Generate summary table itself -->
+  <xd:doc>Inside a summary table page, generates the tables themselves.</xd:doc>
+  <xsl:template name="GenTableCharEnv">
+    <xsl:if test="@Name='CharEnv'">
+      <span id="_Characterization Environment"><ul class="SubItem">
+          <xsl:call-template name="CreateCharEnvTable">
+            <xsl:with-param name="dir">..</xsl:with-param>
+          </xsl:call-template>
+      </ul></span>
+    </xsl:if>        
+  </xsl:template>
+
+
+  <!-- Notes -->
+  <xd:doc>Creates the Notes section at the bottom of the page</xd:doc>
+  <xsl:template name="Notes">
+    <xsl:param name="short">false</xsl:param>
+
+    <div id="screen-only" name="screen-only">
+      <xsl:variable name="address">Notes</xsl:variable>
+      <a>
+        <xsl:attribute name="name">
+          <xsl:value-of select="$address"/>
+        </xsl:attribute>
+        
+        <xsl:call-template name="CreateCollapse">
+          <xsl:with-param name="name" select="$address"/>
+          <xsl:with-param name="short" select="$short"/>
+          <xsl:with-param name="dir">..</xsl:with-param>
+        </xsl:call-template>
+        <span>
+          <xsl:attribute name="id">_<xsl:value-of select="$address"/></xsl:attribute>       
+          <hr class="Title"/>
+          <ul>
+            <xsl:call-template name="BasicNotes">
+              <xsl:with-param name="Page"       select="/Cell/@Name"/>
+              <xsl:with-param name="PDFLink"    select="/Cell/@Name"/>
+              <xsl:with-param name="CornerNode" select="$CornerNode"/>
+            </xsl:call-template>
+            <li>
+              <xsl:call-template name="Corner">
+                <xsl:with-param name="Corner"  select="$CornerNode"/>
+                <xsl:with-param name="Page"    select="/Cell/@Name"/>
+                <xsl:with-param name="PDFLink" select="/Cell/@Name"/>
+              </xsl:call-template>
+            </li>
+            <xsl:choose>
+              <xsl:when test="$LibMode!='normal'">
+                <xsl:call-template name="TransitionPoints">
+                  <xsl:with-param name="XmlLib" select="$RefXmlLib"/>
+                </xsl:call-template>
+              </xsl:when>
+              <xsl:otherwise>
+                <xsl:call-template name="TransitionPoints">
+                  <xsl:with-param name="XmlLib" select="$XmlLibrary/Library"/>
+                </xsl:call-template>
+              </xsl:otherwise>
+            </xsl:choose>
+          </ul>
+        </span>
+      </a>
+    </div>
+
+    <div id="print-only" name="print-only">
+      <xsl:call-template name="BasicNotes">
+        <xsl:with-param name="Page"       select="/Cell/@Name"/>
+        <xsl:with-param name="PDFLink"    select="/Cell/@Name"/>
+        <xsl:with-param name="CornerNode" select="$CornerNode"/>
+      </xsl:call-template>
+      <xsl:call-template name="Corner">
+        <xsl:with-param name="Corner"  select="$CornerNode"/>
+        <xsl:with-param name="Page"    select="/Cell/@Name"/>
+        <xsl:with-param name="PDFLink" select="/Cell/@Name"/>
+      </xsl:call-template>
+      <xsl:choose>
+        <xsl:when test="$LibMode!='normal'">
+          <xsl:call-template name="TransitionPoints">
+            <xsl:with-param name="XmlLib" select="$RefXmlLib"/>
+          </xsl:call-template>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:call-template name="TransitionPoints">
+            <xsl:with-param name="XmlLib" select="$XmlLibrary/Library"/>
+          </xsl:call-template>
+        </xsl:otherwise>
+      </xsl:choose>
+      <br/>
+    </div>
+  </xsl:template>
+
+  <xsl:template name="TransitionPoints">
+    <xsl:param name="XmlLib"/>
+
+    <xsl:if test="$XmlLib/slew_lower_threshold_pct_rise and $XmlLib/slew_upper_threshold_pct_rise">
+      <xsl:if test="$XmlLib/slew_lower_threshold_pct_fall and $XmlLib/slew_upper_threshold_pct_fall">
+        Output transition is defined from 
+        <span class="bold"><xsl:value-of select="number($XmlLib/slew_lower_threshold_pct_rise)"/>%</span> to 
+        <span class="bold"><xsl:value-of select="number($XmlLib/slew_upper_threshold_pct_rise)"/>%</span> (rising) and from
+        <span class="bold"><xsl:value-of select="number($XmlLib/slew_upper_threshold_pct_fall)"/>%</span> to 
+        <span class="bold"><xsl:value-of select="number($XmlLib/slew_lower_threshold_pct_fall)"/>%</span> (falling) output voltage.
+        <br/>
+      </xsl:if>
+    </xsl:if>
+    <xsl:if test="$XmlLib/input_threshold_pct_rise and $XmlLib/input_threshold_pct_fall">
+      <xsl:if test="$XmlLib/output_threshold_pct_rise and $XmlLib/output_threshold_pct_fall">
+        Propagation delay is measured from 
+        <span class="bold"><xsl:value-of select="number($XmlLib/input_threshold_pct_rise)"/>%</span> (input rise) or
+        <span class="bold"><xsl:value-of select="number($XmlLib/input_threshold_pct_fall)"/>%</span> (input fall) to
+        <span class="bold"><xsl:value-of select="number($XmlLib/output_threshold_pct_rise)"/>%</span> (output rise) or
+        <span class="bold"><xsl:value-of select="number($XmlLib/output_threshold_pct_fall)"/>%</span> (output fall).
+        <br/>
+      </xsl:if>
+    </xsl:if>
+  </xsl:template>
+
+  
+  
+  
+  <xd:doc>
+    Used to build the different table sections inside the cell page
+    <xd:param name="SecId" type="string">identifier for the section to be created</xd:param>
+    <xd:param name="SecTitle" type="string">
+      <xd:short>title for the section to be created.</xd:short>
+      <xd:detail>Default value is extracted from the <i>Map</i> template and the library threshold parameters</xd:detail>
+    </xd:param>
+    <xd:param name="SecTag" type="string">
+      <xd:short>tag for the section to be created.</xd:short>
+      <xd:detail>Default value is extracted from the <i>Map</i> template</xd:detail>
+    </xd:param>
+    <xd:param name="HidCollapse" type="boolean">defines if the branch should start out hidden. Default value is <i>false</i></xd:param>
+    <xd:param name="short" type="boolean">true if it is a summary entry, false otherwise. Default value is <i>false</i></xd:param>
+    <xd:param name="pTag" type="string">address of the parent section</xd:param>    
+    <xd:param name="internal" type="HTML">section contents</xd:param>
+    <xd:param name="addLegend" type="boolean">if a legend should be addded to the section</xd:param>
+  </xd:doc>
+  <xsl:template name="CreateSecBasics">
+    <xsl:param name="SecId"/>
+    <xsl:param name="SecTitle">
+      <xsl:call-template name="Map">
+        <xsl:with-param name="key" select="concat($SecId,'_Title')"/>
+      </xsl:call-template>
+    </xsl:param>
+    <xsl:param name="SecTag">
+      <xsl:call-template name="Map">
+        <xsl:with-param name="key" select="concat($SecId, '_Tag')"/>
+      </xsl:call-template>
+    </xsl:param>
+    <xsl:param name="HidCollapse">false</xsl:param>
+    <xsl:param name="short">false</xsl:param>
+    <xsl:param name="pTag"/>
+    <xsl:param name="internal"/>
+    <xsl:param name="addLegend">true</xsl:param>
+
+    <xsl:variable name="CtpLink">
+      <xsl:if test="$SecId=$PD or $SecId=$OS or $SecId=$PDV">
+        <xsl:variable name="path">..</xsl:variable>
+
+        <xsl:variable name="linkType">
+          <xsl:choose>
+            <xsl:when test="$SecId=$PD or $SecId=$PDV">propagation</xsl:when>
+            <xsl:otherwise>slope</xsl:otherwise>
+          </xsl:choose>
+        </xsl:variable>
+
+        <xsl:choose>
+          <xsl:when test="$LibMode!='normal'">
+            <xsl:call-template name="CreateCTPLink">
+              <xsl:with-param name="XmlLib" select="$RefXmlLib"/>
+              <xsl:with-param name="path"   select="$path"/>
+              <xsl:with-param name="type"   select="$linkType"/>
+              <xsl:with-param name="unateness">binate</xsl:with-param>
+              <xsl:with-param name="risefall">rise</xsl:with-param>
+            </xsl:call-template>
+            <xsl:text> / </xsl:text>
+            <xsl:call-template name="CreateCTPLink">
+              <xsl:with-param name="XmlLib" select="$RefXmlLib"/>
+              <xsl:with-param name="path"   select="$path"/>
+              <xsl:with-param name="type"   select="$linkType"/>
+              <xsl:with-param name="unateness">binate</xsl:with-param>
+              <xsl:with-param name="risefall">fall</xsl:with-param>
+            </xsl:call-template>
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:call-template name="CreateCTPLink">
+              <xsl:with-param name="XmlLib" select="$XmlLibrary/Library"/>
+              <xsl:with-param name="path"   select="$path"/>
+              <xsl:with-param name="type"   select="$linkType"/>
+              <xsl:with-param name="unateness">binate</xsl:with-param>
+              <xsl:with-param name="risefall">rise</xsl:with-param>
+            </xsl:call-template>
+            <xsl:text> / </xsl:text>
+            <xsl:call-template name="CreateCTPLink">
+              <xsl:with-param name="XmlLib" select="$XmlLibrary/Library"/>
+              <xsl:with-param name="path"   select="$path"/>
+              <xsl:with-param name="type"   select="$linkType"/>
+              <xsl:with-param name="unateness">binate</xsl:with-param>
+              <xsl:with-param name="risefall">fall</xsl:with-param>
+            </xsl:call-template>
+          </xsl:otherwise>
+        </xsl:choose>
+      </xsl:if>
+      <xsl:if test="$SecId=$DPO or $SecId=$TPO or $SecId=$GP">
+        <xsl:text>Flags: </xsl:text>
+        <xsl:variable name="path">..</xsl:variable>
+        <xsl:call-template name="CreateCValidLink">
+          <xsl:with-param name="path"   select="$path"/>
+          <xsl:with-param name="type"   select="'N'"/>
+          <xsl:with-param name="name">N</xsl:with-param>
+        </xsl:call-template>
+        <xsl:text> / </xsl:text>
+        <!-- <xsl:call-template name="CreateCValidLink"> -->
+        <!--   <xsl:with-param name="path"   select="$path"/> -->
+        <!--   <xsl:with-param name="type"   select="'S'"/> -->
+        <!--   <xsl:with-param name="name">S</xsl:with-param> -->
+        <!-- </xsl:call-template> -->
+        <!-- <xsl:text> / </xsl:text> -->
+        <xsl:call-template name="CreateCValidLink">
+          <xsl:with-param name="path"   select="$path"/>
+          <xsl:with-param name="type"   select="'W'"/>
+          <xsl:with-param name="name">W</xsl:with-param>
+        </xsl:call-template>
+      </xsl:if>
+    </xsl:variable>
+
+    <xsl:variable name="Legend">
+      <xsl:choose>
+        <xsl:when test="$addLegend='true'">
+          <xsl:call-template name="Map">
+            <xsl:with-param name="key" select="concat($SecId, '_Legend')"/>
+          </xsl:call-template>
+        </xsl:when>
+        <xsl:otherwise></xsl:otherwise>
+      </xsl:choose>
+    </xsl:variable>
+
+    <a>
+      <xsl:attribute name="name"><xsl:if test="$short='true'">s</xsl:if><xsl:value-of select="$SecTag"/></xsl:attribute>
+
+      <div id="screen-only" name="screen-only">   
+        <xsl:call-template name="CreateCollapse">
+          <xsl:with-param name="name" select="$SecTitle"/>
+          <xsl:with-param name="tag"  select="$SecTag"/>
+          <xsl:with-param name="dir">..</xsl:with-param>
+          <xsl:with-param name="hide" select="$HidCollapse"/>
+          <xsl:with-param name="short" select="$short"/>
+          <xsl:with-param name="parentTag" select="$pTag"/>
+          <xsl:with-param name="extra" select="$CtpLink"/>
+          <xsl:with-param name="legend">
+            <xsl:choose>
+              <xsl:when test="$SecId = $PDV"><xsl:value-of select="$Legend"/></xsl:when>
+              <xsl:otherwise><xsl:value-of select="concat($Legend, $LegSuffix)"/></xsl:otherwise>
+            </xsl:choose>
+          </xsl:with-param>
+        </xsl:call-template>
+      </div>
+
+      <xsl:if test="$short='false'">
+        <span>
+          <xsl:if test="$HidCollapse='true'">
+            <xsl:attribute name="class">hiddenBranch</xsl:attribute>
+          </xsl:if>
+          <xsl:attribute name="id">_<xsl:value-of select="$SecTag"/></xsl:attribute>
+          <xsl:attribute name="hide"><xsl:value-of select="$HidCollapse"/></xsl:attribute>
+          <xsl:attribute name="eName"><xsl:value-of select="$SecTitle"/></xsl:attribute>
+          <xsl:copy-of select="$internal"/>
+        </span>
+      </xsl:if>
+      
+    </a>
+  </xsl:template>
+  
+
+</xsl:stylesheet>

@@ -1,0 +1,467 @@
+<Library CornerName="asap7sc7p5t_RVT_TypTyp_0p70_25_conditional_nldm_TypTyp_0p70_25">
+<FileLocation>
+"/home/rodrigb/work/asap7/work/export_ssp/asap7sc7p5t_RVT/1_0/release_structure/asap7sc7p5t_RVT/front_end/timing_power_noise/NLDM/asap7sc7p5t_RVT_TypTyp_0p70_25_conditional_nldm.lib.gz"</FileLocation>
+<FileName>
+"asap7sc7p5t_RVT_TypTyp_0p70_25_conditional_nldm"</FileName>
+<area>
+0.364500</area>
+<average_fall_power>
+0.680680</average_fall_power>
+<average_rise_power>
+0.738850</average_rise_power>
+<cell_fall>
+<Template>
+<BaseTemplate>
+"Timing_clock_rise_7_7"</BaseTemplate>
+<Name>
+"Timing_clock_rise_7_7_summary_1"</Name>
+<Type>
+"lu_table_template"</Type>
+<variable_1>
+<Name>
+"input_net_transition"</Name>
+<Values>
+<El Value="1.000000"/>
+<El Value="7.812500"/>
+<El Value="15.625000"/>
+<El Value="31.250000"/>
+<El Value="62.500000"/>
+<El Value="125.000000"/>
+<El Value="250.000000"/>
+</Values>
+</variable_1>
+<variable_2>
+<Name>
+"total_output_net_capacitance"</Name>
+<Values>
+<El Value="0.100000"/>
+<El Value="3.125000"/>
+<El Value="6.250000"/>
+<El Value="12.500000"/>
+<El Value="25.000000"/>
+<El Value="50.000000"/>
+<El Value="100.000000"/>
+</Values>
+</variable_2>
+</Template>
+<LUT id="cell_fall" Template="Timing_clock_rise_7_7_summary_1" gid="168">
+<LinApprox>
+<Line cAng="3.27762" cLin="52.3415"/>
+<Line cAng="3.28449" cLin="54.0749"/>
+<Line cAng="3.28228" cLin="56.29"/>
+<Line cAng="3.28824" cLin="60.4645"/>
+<Line cAng="3.27606" cLin="67.0866"/>
+<Line cAng="3.28644" cLin="76.0163"/>
+<Line cAng="3.27467" cLin="88.1325"/>
+</LinApprox>
+<Line TempIndex="1.000000">
+<El Value="49.013000"/>
+<El Value="63.204000"/>
+<El Value="73.932000"/>
+<El Value="94.418000"/>
+<El Value="135.209000"/>
+<El Value="216.928000"/>
+<El Value="379.296000"/>
+</Line>
+<Line TempIndex="7.812500">
+<El Value="50.850000"/>
+<El Value="65.045000"/>
+<El Value="75.772000"/>
+<El Value="96.274000"/>
+<El Value="136.952000"/>
+<El Value="218.691000"/>
+<El Value="381.902000"/>
+</Line>
+<Line TempIndex="15.625000">
+<El Value="53.055000"/>
+<El Value="67.251000"/>
+<El Value="77.976000"/>
+<El Value="98.475000"/>
+<El Value="139.128000"/>
+<El Value="220.768000"/>
+<El Value="383.905000"/>
+</Line>
+<Line TempIndex="31.250000">
+<El Value="57.247000"/>
+<El Value="71.460000"/>
+<El Value="82.192000"/>
+<El Value="102.642000"/>
+<El Value="143.424000"/>
+<El Value="225.352000"/>
+<El Value="388.636000"/>
+</Line>
+<Line TempIndex="62.500000">
+<El Value="63.795000"/>
+<El Value="77.992000"/>
+<El Value="88.722000"/>
+<El Value="109.219000"/>
+<El Value="149.939000"/>
+<El Value="231.158000"/>
+<El Value="394.083000"/>
+</Line>
+<Line TempIndex="125.000000">
+<El Value="72.801000"/>
+<El Value="86.992000"/>
+<El Value="97.716000"/>
+<El Value="118.241000"/>
+<El Value="158.920000"/>
+<El Value="240.761000"/>
+<El Value="404.029000"/>
+</Line>
+<Line TempIndex="250.000000">
+<El Value="84.828000"/>
+<El Value="99.038000"/>
+<El Value="109.799000"/>
+<El Value="130.325000"/>
+<El Value="170.833000"/>
+<El Value="252.117000"/>
+<El Value="415.016000"/>
+</Line>
+</LUT>
+</cell_fall>
+<cell_leakage_power>
+1194.261837</cell_leakage_power>
+<cell_rise>
+<Template>
+<BaseTemplate>
+"Timing_clock_rise_7_7"</BaseTemplate>
+<Name>
+"Timing_clock_rise_7_7_summary_1"</Name>
+<Type>
+"lu_table_template"</Type>
+<variable_1>
+<Name>
+"input_net_transition"</Name>
+<Values>
+<El Value="1.000000"/>
+<El Value="7.812500"/>
+<El Value="15.625000"/>
+<El Value="31.250000"/>
+<El Value="62.500000"/>
+<El Value="125.000000"/>
+<El Value="250.000000"/>
+</Values>
+</variable_1>
+<variable_2>
+<Name>
+"total_output_net_capacitance"</Name>
+<Values>
+<El Value="0.100000"/>
+<El Value="3.125000"/>
+<El Value="6.250000"/>
+<El Value="12.500000"/>
+<El Value="25.000000"/>
+<El Value="50.000000"/>
+<El Value="100.000000"/>
+</Values>
+</variable_2>
+</Template>
+<LUT id="cell_rise" Template="Timing_clock_rise_7_7_summary_1" gid="151">
+<LinApprox>
+<Line cAng="3.96496" cLin="43.6348"/>
+<Line cAng="3.96645" cLin="45.4522"/>
+<Line cAng="3.96945" cLin="47.6697"/>
+<Line cAng="3.9591" cLin="51.9839"/>
+<Line cAng="3.97047" cLin="58.6534"/>
+<Line cAng="3.95538" cLin="68.0625"/>
+<Line cAng="3.97021" cLin="80.3951"/>
+</LinApprox>
+<Line TempIndex="1.000000">
+<El Value="41.556000"/>
+<El Value="56.553000"/>
+<El Value="69.146000"/>
+<El Value="93.966000"/>
+<El Value="143.353000"/>
+<El Value="242.199000"/>
+<El Value="439.668000"/>
+</Line>
+<Line TempIndex="7.812500">
+<El Value="43.426000"/>
+<El Value="58.419000"/>
+<El Value="70.997000"/>
+<El Value="95.825000"/>
+<El Value="145.064000"/>
+<El Value="244.031000"/>
+<El Value="441.695000"/>
+</Line>
+<Line TempIndex="15.625000">
+<El Value="45.644000"/>
+<El Value="60.641000"/>
+<El Value="73.227000"/>
+<El Value="98.052000"/>
+<El Value="147.384000"/>
+<El Value="246.427000"/>
+<El Value="444.195000"/>
+</Line>
+<Line TempIndex="31.250000">
+<El Value="49.910000"/>
+<El Value="64.899000"/>
+<El Value="77.482000"/>
+<El Value="102.288000"/>
+<El Value="151.549000"/>
+<El Value="250.100000"/>
+<El Value="447.503000"/>
+</Line>
+<Line TempIndex="62.500000">
+<El Value="56.634000"/>
+<El Value="71.642000"/>
+<El Value="84.212000"/>
+<El Value="109.045000"/>
+<El Value="158.362000"/>
+<El Value="257.485000"/>
+<El Value="455.278000"/>
+</Line>
+<Line TempIndex="125.000000">
+<El Value="65.919000"/>
+<El Value="80.933000"/>
+<El Value="93.525000"/>
+<El Value="118.361000"/>
+<El Value="167.556000"/>
+<El Value="266.115000"/>
+<El Value="463.140000"/>
+</Line>
+<Line TempIndex="250.000000">
+<El Value="78.406000"/>
+<El Value="93.460000"/>
+<El Value="106.056000"/>
+<El Value="130.887000"/>
+<El Value="180.011000"/>
+<El Value="278.756000"/>
+<El Value="477.221000"/>
+</Line>
+</LUT>
+</cell_rise>
+<first_voltage_name>
+"VDD"</first_voltage_name>
+<full_cycle_delay>
+<Template>
+<BaseTemplate>
+"Timing_clock_rise_7_7"</BaseTemplate>
+<Name>
+"Timing_clock_rise_7_7_summary_1"</Name>
+<Type>
+"lu_table_template"</Type>
+<variable_1>
+<Name>
+"input_net_transition"</Name>
+<Values>
+<El Value="1.000000"/>
+<El Value="7.812500"/>
+<El Value="15.625000"/>
+<El Value="31.250000"/>
+<El Value="62.500000"/>
+<El Value="125.000000"/>
+<El Value="250.000000"/>
+</Values>
+</variable_1>
+<variable_2>
+<Name>
+"total_output_net_capacitance"</Name>
+<Values>
+<El Value="0.100000"/>
+<El Value="3.125000"/>
+<El Value="6.250000"/>
+<El Value="12.500000"/>
+<El Value="25.000000"/>
+<El Value="50.000000"/>
+<El Value="100.000000"/>
+</Values>
+</variable_2>
+</Template>
+<LUT id="full_cycle_delay" Template="Timing_clock_rise_7_7_summary_1" gid="1bf">
+<Line TempIndex="1.000000">
+<El Value="90.569000"/>
+<El Value="119.757000"/>
+<El Value="143.078000"/>
+<El Value="188.384000"/>
+<El Value="278.562000"/>
+<El Value="459.127000"/>
+<El Value="818.964000"/>
+</Line>
+<Line TempIndex="7.812500">
+<El Value="94.276000"/>
+<El Value="123.464000"/>
+<El Value="146.769000"/>
+<El Value="192.099000"/>
+<El Value="282.016000"/>
+<El Value="462.722000"/>
+<El Value="823.597000"/>
+</Line>
+<Line TempIndex="15.625000">
+<El Value="98.699000"/>
+<El Value="127.892000"/>
+<El Value="151.203000"/>
+<El Value="196.527000"/>
+<El Value="286.512000"/>
+<El Value="467.195000"/>
+<El Value="828.100000"/>
+</Line>
+<Line TempIndex="31.250000">
+<El Value="107.157000"/>
+<El Value="136.359000"/>
+<El Value="159.674000"/>
+<El Value="204.930000"/>
+<El Value="294.973000"/>
+<El Value="475.452000"/>
+<El Value="836.139000"/>
+</Line>
+<Line TempIndex="62.500000">
+<El Value="120.429000"/>
+<El Value="149.634000"/>
+<El Value="172.934000"/>
+<El Value="218.264000"/>
+<El Value="308.301000"/>
+<El Value="488.643000"/>
+<El Value="849.361000"/>
+</Line>
+<Line TempIndex="125.000000">
+<El Value="138.720000"/>
+<El Value="167.925000"/>
+<El Value="191.241000"/>
+<El Value="236.602000"/>
+<El Value="326.476000"/>
+<El Value="506.876000"/>
+<El Value="867.169000"/>
+</Line>
+<Line TempIndex="250.000000">
+<El Value="163.234000"/>
+<El Value="192.498000"/>
+<El Value="215.855000"/>
+<El Value="261.212000"/>
+<El Value="350.844000"/>
+<El Value="530.873000"/>
+<El Value="892.237000"/>
+</Line>
+</LUT>
+</full_cycle_delay>
+<in_place_swap_mode>
+"match_footprint"</in_place_swap_mode>
+<input_threshold_pct_fall>
+50</input_threshold_pct_fall>
+<input_threshold_pct_rise>
+50</input_threshold_pct_rise>
+<library_features>
+</library_features>
+<output_threshold_pct_fall>
+50</output_threshold_pct_fall>
+<output_threshold_pct_rise>
+50</output_threshold_pct_rise>
+<slew_derate_from_library>
+0.500000</slew_derate_from_library>
+<slew_lower_threshold_pct_fall>
+30</slew_lower_threshold_pct_fall>
+<slew_lower_threshold_pct_rise>
+30</slew_lower_threshold_pct_rise>
+<slew_upper_threshold_pct_fall>
+70</slew_upper_threshold_pct_fall>
+<slew_upper_threshold_pct_rise>
+70</slew_upper_threshold_pct_rise>
+<worst_timing>
+477.221000</worst_timing>
+<Profilings>
+<Plot Name="cell">
+<Plot File="prof_Worst_Output_Transition" Name="output_transition" Prefix="single"/>
+<Plot File="prof_Worst_Power" Name="power" Prefix="single"/>
+<Plot File="prof_Worst_Propagation_Delay" Name="propagation_delay" Prefix="single"/>
+<Plot File="prof_area" Name="area"/>
+<Plot File="prof_cell_leakage_power" Name="cell_leakage_power"/>
+</Plot>
+<Plot Name="power">
+<Plot File="prof_fall_power_1D" Name="fall_power_1d"/>
+<Plot File="prof_rise_power_1D" Name="rise_power_1d"/>
+</Plot>
+<Plot Name="propagation_delay">
+<Plot File="prof_cell_fall_ptp_is" Name="cell_fall"/>
+<Plot File="prof_cell_rise_ptp_is" Name="cell_rise"/>
+</Plot>
+<Plot Name="out_sl">
+<Plot File="prof_fall_transition_ptp_is" Name="fall_transition"/>
+<Plot File="prof_rise_transition_ptp_is" Name="rise_transition"/>
+</Plot>
+</Profilings>
+<DefaultValues><default_cell_leakage_power>
+0</default_cell_leakage_power>
+<default_fanout_load>
+1</default_fanout_load>
+<default_inout_pin_cap>
+1000</default_inout_pin_cap>
+<default_input_pin_cap>
+1000</default_input_pin_cap>
+<default_leakage_power_density>
+0</default_leakage_power_density>
+<default_max_transition>
+320</default_max_transition>
+<default_operating_conditions>
+"TypTyp_0p70_25"</default_operating_conditions>
+<default_output_pin_cap>
+0</default_output_pin_cap>
+</DefaultValues><MainAttributes><Name>
+"asap7sc7p5t_RVT_TypTyp_0p70_25"</Name>
+<comment>
+"Copyright (C) 1984-2024 Silvaco, Inc. All rights reserved."</comment>
+<date>
+"Thu, 1 Aug 2024, 14:21:13"</date>
+<delay_model>
+"table_lookup"</delay_model>
+<revision>
+"revision 1.0"</revision>
+<technology>
+"cmos"</technology>
+</MainAttributes><NominalParameters><nom_process>
+1</nom_process>
+<nom_temperature>
+25</nom_temperature>
+<nom_voltage>
+0.700000</nom_voltage>
+</NominalParameters><OriginalUnits></OriginalUnits><Cells>
+<CellType Name="Sequential">
+<Cell Name="C2MOS_FF"/>
+<Cell Name="TG_FF"/>
+<Cell Name="TSPC_FF"/>
+</CellType>
+</Cells>
+<TimingSummary>
+<Entry Name="OS" Link="OutputTransition"/>
+<Entry Name="PD" Link="PropagationDelay"/>
+<Entry Name="FCD" Link="FullCycleDelay"/>
+<Entry Name="OSRatio" Link="OutputTransitionRatio"/>
+<Entry Name="PDRatio" Link="PropagationDelayRatio"/>
+<Entry Name="FO4D" Link="FO4Delay"/>
+<Entry Name="FOOS" Link="FirstOrderOutputTransition"/>
+<Entry Name="FOPD" Link="FirstOrderPropagationDelay"/>
+<Entry Name="MS" Link="SetupHoldMetastability"/>
+<Entry Name="ST" Link="Setup"/>
+<Entry Name="HT" Link="Hold"/>
+<Entry Name="MP" Link="MinPulseWidth"/>
+<Entry Name="DQ" Link="ConstrainedDataToOutputDelay"/>
+</TimingSummary>
+<PowerSummary>
+<Entry Name="FP" Link="PowerFall"/>
+<Entry Name="RP" Link="PowerRise"/>
+<Entry Name="FCP" Link="FullCyclePower"/>
+<Entry Name="TPF" Link="TotalPowerFall"/>
+<Entry Name="TPR" Link="TotalPowerRise"/>
+<Entry Name="TFCP" Link="TotalFullCyclePower"/>
+<Entry Name="SP" Link="StaticPowerConsumption"/>
+</PowerSummary>
+<CapSummary>
+<Entry Name="CAP" Link="Capacitance"/>
+<Entry Name="MXC" Link="MaxCapacitance"/>
+</CapSummary>
+<OperatingConditions>
+<OperatingCondition Name="TypTyp_0p70_25">
+<Name>
+"TypTyp_0p70_25"</Name>
+<process>
+1</process>
+<process_corner>
+"TypTyp"</process_corner>
+<temperature>
+25</temperature>
+<tree_type>
+"balanced_tree"</tree_type>
+<voltage>
+0.700000</voltage>
+</OperatingCondition>
+</OperatingConditions>
+</Library>

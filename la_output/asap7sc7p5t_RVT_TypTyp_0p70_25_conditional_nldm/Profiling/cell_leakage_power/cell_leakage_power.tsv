@@ -1,0 +1,12 @@
+PROFILING cell_leakage_power			nW
+
+cell_leakage_power	"(-inf, -494.245nW]"	none
+	"(-494.245nW, 1194.26nW]"	2 elements
+		C2MOS_FF	0.229679	""
+		TG_FF	0.384376	""
+	"(1194.26nW, 2882.77nW]"	none
+	"(2882.77nW, +inf)"	1 element
+		TSPC_FF	3582.17	""
+
+Profiling Statistics	Average	1194.26
+	Standard Deviation	1688.51
