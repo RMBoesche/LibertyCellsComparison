@@ -1,7 +1,7 @@
-import os
 import re
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+import os
 
 # Predefined indices
 indices = {
@@ -21,12 +21,19 @@ lut_to_indices = {
     'rise_transition': ('input_transition_time', 'load_capacitance'),
 }
 
+def read_all_liberty_files(directory):
+    all_lut_info = {}
+    for filename in os.listdir(directory):
+        if filename.endswith('.lib'):
+            file_path = os.path.join(directory, filename)
+            print(f"Processing file: {filename}")
+            all_lut_info[filename] = parse_specific_luts(file_path)
+    return all_lut_info
+
 def parse_specific_luts(liberty_file_path):
-    # Reading the content of the liberty file
     with open(liberty_file_path, 'r') as file:
         liberty_content = file.read()
 
-    # Function to extract the content of a specific cell, considering nested braces
     def extract_cell_content(liberty_text, cell_name):
         pattern = re.compile(r'cell\s*\(\s*' + re.escape(cell_name) + r'\s*\)\s*\{')
         match = pattern.search(liberty_text)
@@ -43,7 +50,6 @@ def parse_specific_luts(liberty_file_path):
             return liberty_text[start_index:end_index-1]
         return None
 
-    # Function to extract LUT data
     def extract_lut_data(lut_content):
         values_pattern = re.compile(r'values\s*\(\s*(.*?)\s*\)', re.DOTALL)
         values_match = values_pattern.search(lut_content)
@@ -54,7 +60,6 @@ def parse_specific_luts(liberty_file_path):
             return values
         return None
 
-    # Extracting content for multiple cells
     cells = ['C2MOS_FF', 'TSPC_FF', 'TG_FF']
     all_cells_data = {}
 
@@ -64,10 +69,7 @@ def parse_specific_luts(liberty_file_path):
         if not cell_content:
             print(f"Cell content not found for {cell_name}.")
             continue
-        
-        print(f"Extracted cell content for {cell_name}")
 
-        # Extracting specific LUTs
         lut_patterns = {
             'fall_power': re.compile(r'fall_power\s*\((?!Hidden_power).*?\)\s*\{(.*?)\}', re.DOTALL),
             'rise_power': re.compile(r'rise_power\s*\((?!Hidden_power).*?\)\s*\{(.*?)\}', re.DOTALL),
@@ -92,23 +94,9 @@ def parse_specific_luts(liberty_file_path):
                             'values': lut_values
                         })
                 lut_data[key] = extracted_luts
-                print(f"Extracted LUT for {key} in cell {cell_name}")
-            else:
-                print(f"No LUT found for {key} in cell {cell_name}")
-        
         all_cells_data[cell_name] = lut_data
 
     return all_cells_data
-
-def read_all_liberty_files(liberty_dir):
-    all_lut_info = {}
-    for filename in os.listdir(liberty_dir):
-        if filename.endswith('.lib'):
-            filepath = os.path.join(liberty_dir, filename)
-            print(f"Processing file: {filename}")
-            lut_info = parse_specific_luts(filepath)
-            all_lut_info[filename] = lut_info
-    return all_lut_info
 
 def calculate_lut_averages(all_lut_info):
     vt_luts = {cell: {key: {'RVT': {'FF': [], 'TT': [], 'SS': []}, 'LVT': {'FF': [], 'TT': [], 'SS': []}, 'SLVT': {'FF': [], 'TT': [], 'SS': []}} for key in lut_to_indices.keys()} for cell in ['C2MOS_FF', 'TSPC_FF', 'TG_FF']}
@@ -121,10 +109,9 @@ def calculate_lut_averages(all_lut_info):
                 for lut in lut_list:
                     lut_values = np.array(lut['values'], dtype=float)
                     average_value = np.mean(lut_values)
-                    if not np.isnan(average_value):  # Only append if the average is a valid number
+                    if not np.isnan(average_value):
                         vt_luts[cell][key][vt][corner].append(average_value)
 
-    # Calculate the final average for each metric in each corner
     final_averages = {}
     for cell, metrics in vt_luts.items():
         final_averages[cell] = {}
@@ -133,33 +120,42 @@ def calculate_lut_averages(all_lut_info):
             for vt, corners in vts.items():
                 final_averages[cell][key][vt] = {}
                 for corner, values in corners.items():
-                    if values:  # Only calculate average if there are values
+                    if values:
                         final_averages[cell][key][vt][corner] = np.mean(values)
                     else:
-                        final_averages[cell][key][vt][corner] = float('nan')  # Use NaN for empty averages
+                        final_averages[cell][key][vt][corner] = float('nan')
 
     return final_averages
 
 def plot_averages_for_vts(average_data):
     x_labels = ['RVT_FF', 'RVT_TT', 'RVT_SS', 'LVT_FF', 'LVT_TT', 'LVT_SS', 'SLVT_FF', 'SLVT_TT', 'SLVT_SS']
+    vt_labels = ['RVT', 'LVT', 'SLVT']
+    markers = {'C2MOS_FF': 'o', 'TSPC_FF': 's', 'TG_FF': '^'}  # 'o' for circle, 's' for square, '^' for triangle
 
     for key in lut_to_indices.keys():
-        plt.figure(figsize=(10, 6))
+        plt.figure(figsize=(12, 8))
 
         for cell_name, luts in average_data.items():
             y_values = []
-            for vt in ['RVT', 'LVT', 'SLVT']:
+            for vt in vt_labels:
                 for corner in ['FF', 'TT', 'SS']:
                     if key in luts and vt in luts[key] and corner in luts[key][vt]:
                         y_values.append(luts[key][vt][corner])
                     else:
-                        y_values.append(float('nan'))  # Use NaN for missing values
+                        y_values.append(float('nan'))
             
-            # Filter out NaN values
-            x_labels_filtered = [x for x, y in zip(x_labels, y_values) if not np.isnan(y)]
-            y_values_filtered = [y for y in y_values if not np.isnan(y)]
-            
-            plt.plot(x_labels_filtered, y_values_filtered, marker='o', label=cell_name)
+            # Insert np.nan to break the line between different VTs
+            y_values_with_nan = []
+            x_labels_with_nan = []
+            for i, y in enumerate(y_values):
+                if i % 3 == 0 and i != 0:  # Add np.nan before starting a new VT section
+                    y_values_with_nan.append(np.nan)
+                    x_labels_with_nan.append('')
+                y_values_with_nan.append(y)
+                x_labels_with_nan.append(x_labels[i])
+
+            marker = markers.get(cell_name, 'o')  # Default to circle if marker not found
+            plt.plot(x_labels_with_nan, y_values_with_nan, marker=marker, label=cell_name)
 
         plt.xlabel('VT_Corner')
         plt.ylabel(key.replace('_', ' ').title())
@@ -167,18 +163,15 @@ def plot_averages_for_vts(average_data):
         plt.legend()
         plt.grid(True)
         plt.xticks(rotation=45)
-        plt.savefig(f'{key}_VT_Corner_averages.png')  # Save the plot as a PNG file
+        plt.savefig(f'{key}_VT_Corner_averages.png')
         plt.close()
 
-# Path to the Liberty directory
+
 liberty_directory = './liberty/'
 
-# Read all Liberty files
 all_lut_info = read_all_liberty_files(liberty_directory)
 
-# Calculate averages for all VTs and corners
 average_data = calculate_lut_averages(all_lut_info)
 
-# Plot averages for all VTs and corners
 plot_averages_for_vts(average_data)
 
