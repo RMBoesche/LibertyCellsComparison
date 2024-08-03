@@ -132,6 +132,16 @@ def plot_averages_for_vts(average_data):
     vt_labels = ['RVT', 'LVT', 'SLVT']
     markers = {'C2MOS_FF': 'o', 'TSPC_FF': 's', 'TG_FF': '^'}  # 'o' for circle, 's' for square, '^' for triangle
 
+    # Dicionário para mapear métricas às suas unidades
+    metric_units = {
+        'fall_power': 'uW/GHz',
+        'rise_power': 'uW/GHz',
+        'cell_fall': 'ps',
+        'cell_rise': 'ps',
+        'fall_transition': 'ps',
+        'rise_transition': 'ps'
+    }
+
     for key in lut_to_indices.keys():
         plt.figure(figsize=(12, 8))
 
@@ -158,7 +168,7 @@ def plot_averages_for_vts(average_data):
             plt.plot(x_labels_with_nan, y_values_with_nan, marker=marker, label=cell_name)
 
         plt.xlabel('VT_Corner')
-        plt.ylabel(key.replace('_', ' ').title())
+        plt.ylabel(f'{key.replace("_", " ").title()} ({metric_units.get(key, "")})')
         plt.title(f'{key.replace("_", " ").title()} Averages for VTs and Corners')
         plt.legend()
         plt.grid(True)
