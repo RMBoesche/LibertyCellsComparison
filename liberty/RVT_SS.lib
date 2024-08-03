@@ -1,0 +1,1936 @@
+/* 
+* ******************************************************************************
+* *                                                                            *
+* *                   Copyright (C) 1984-2024 Silvaco, Inc.                    *
+* *                           All rights reserved.                             *
+* *                                                                            *
+* * The Silvaco name and the Silvaco logo are trademarks of Silvaco, Inc.      *
+* * and/or its affiliates ("Silvaco"). All trademarks, logos, software marks,  *
+* * and trade names (collectively, the "Marks") in this program are            *
+* * proprietary to Silvaco or other respective owners that have granted        *
+* * Silvaco the right and license to use such Marks. You are not permitted to  *
+* * use the Marks without the prior written consent of Silvaco or such third   *
+* * party that may own the Marks.                                              *
+* *                                                                            *
+* * This file has been provided pursuant to a license agreement containing     *
+* * restrictions on its use. This file contains valuable trade secrets and     *
+* * proprietary information of Silvaco and is protected by U.S. and            *
+* * international laws.                                                        *
+* *                                                                            *
+* * The copyright notice(s) in this file do not indicate actual or intended    *
+* * publication of this file.                                                  *
+* *                                                                            *
+* *                   Viola, 2024.0.0.C - build 202402091636                   *
+* *                                                                            *
+* ******************************************************************************
+* 
+* 
+* Running on cafipdev for user Rodrigo Boesche (rodrigb).
+* Local time is now Fri, 2 Aug 2024, 15:30:31.
+* Main process id is 28916.
+*
+* Spice engine            : SmartSpice 5.5.2.C
+* Liberty export type     : conditional
+*
+* Characterization Corner : SlowSlow_0p63_100
+* Process                 : SlowSlow
+* Temperature             : 100C
+* Voltage                 : 0.63V
+*
+****************************************************************************/
+
+library (asap7sc7p5t_RVT_SlowSlow_0p63_100) {
+
+  /* Documentation Attributes */
+  date                    		: "Fri, 2 Aug 2024, 15:30:31";
+  revision                		: "revision 1.0";
+  comment                 		: "Copyright (C) 1984-2024 Silvaco, Inc. All rights reserved.";
+
+  /* General Attributes */
+  technology              		  (cmos);
+  delay_model             		: table_lookup;
+  in_place_swap_mode      		: match_footprint;
+  library_features        		  (report_delay_calculation,report_power_calculation);
+
+  /* Units Attributes */
+  time_unit               		: "1ns";
+  leakage_power_unit      		: "1pW";
+  voltage_unit            		: "1V";
+  current_unit            		: "1uA";
+  pulling_resistance_unit 		: "1kohm";
+  capacitive_load_unit    		  (1,pf);
+
+  /* Operation Conditions */
+  nom_process             		: 1.00;
+  nom_temperature         		: 100.00;
+  nom_voltage             		: 0.630;
+
+  voltage_map (VDD,0.630);
+  voltage_map (VSS,0.000);
+
+  define(process_corner, operating_conditions, string);
+  operating_conditions (SlowSlow_0p63_100) {
+    process_corner	: "SlowSlow";
+    process       	: 1.00;
+    voltage       	: 0.630;
+    temperature   	: 100.00;
+    tree_type     	: balanced_tree;
+  }
+  default_operating_conditions : SlowSlow_0p63_100;
+
+  /* Threshold Definitions */
+  slew_lower_threshold_pct_fall 	: 30.00 ;
+  slew_lower_threshold_pct_rise 	: 30.00 ;
+  slew_upper_threshold_pct_fall 	: 70.00 ;
+  slew_upper_threshold_pct_rise 	: 70.00 ;
+  slew_derate_from_library      	: 0.50 ;
+  input_threshold_pct_fall      	: 50.00 ;
+  input_threshold_pct_rise      	: 50.00 ;
+  output_threshold_pct_fall     	: 50.00 ;
+  output_threshold_pct_rise     	: 50.00 ;
+  default_leakage_power_density 	: 0.00 ;
+  default_cell_leakage_power    	: 0.00 ;
+
+  /* Default Pin Attributes */
+  default_inout_pin_cap       		: 1.000000;
+  default_input_pin_cap       		: 1.000000;
+  default_output_pin_cap      		: 0.000000;
+  default_fanout_load         		: 1.000000;
+  default_max_transition      		: 0.320000;
+
+  define(drive_strength, cell, float);
+  define(ng_base_cell, cell, string);
+  define(ng_basename, cell, string);
+  define(ng_build_equation, cell, string);
+  define(ng_nominal_skew, cell, float);
+  define(ng_nominal_strength, cell, float);
+  define(ng_variant_type, cell, string);
+
+  /* Model Cards Information
+   * /main/foundry/asu/asap7/source/asap7PDK_r1p7/models/hspice//7nm_SS.pm
+   *  Last Modified: Mon Mar 20 10:31:34 2023
+   */
+
+  /* Silvaco Characterization Settings */
+  define_group(char_settings, library);
+  define_group(char_settings, cell);
+  define(add_pin_cap_to_lut_indexes, char_settings, boolean);
+  define(spice_version, char_settings, string);
+  define(constrained_measure_capacitance, char_settings, string);
+  define(input_slope_fall_level, char_settings, string);
+  define(input_slope_fall_time, char_settings, string);
+  define(input_slope_rise_level, char_settings, string);
+  define(input_slope_rise_time, char_settings, string);
+  define(power_integration_threshold, char_settings, string);
+  define(arc_sensitization_reduction_threshold, char_settings, integer);
+  define(bisect_targ, char_settings, string);
+  define(bisect_targ_err, char_settings, string);
+  define(bisection_itr_cnt, char_settings, integer);
+  define(clear_preset_pw_char_settings, char_settings, string);
+  define(delay, char_settings, string);
+  define(enable_comb_hidden_power, char_settings, boolean);
+  define(enable_comb_leakage, char_settings, boolean);
+  define(enable_comb_onehot_daat_timing_power, char_settings, boolean);
+  define(enable_comb_onehot_ts_timing_power, char_settings, boolean);
+  define(enable_comb_timing_power, char_settings, boolean);
+  define(enable_comb_tristate, char_settings, boolean);
+  define(enable_hot_setup_gated, char_settings, boolean);
+  define(enable_pulse_width, char_settings, boolean);
+  define(enable_recovery_removal, char_settings, boolean);
+  define(enable_seq_hidden_power, char_settings, boolean);
+  define(enable_seq_input_cap, char_settings, boolean);
+  define(enable_seq_leakage, char_settings, boolean);
+  define(enable_seq_timing_power, char_settings, boolean);
+  define(enable_setup_hold, char_settings, boolean);
+  define(export_conditional_constrained_timing, char_settings, boolean);
+  define(headroom, char_settings, string);
+  define(max_no_of_hidden_power_states, char_settings, integer);
+  define(max_no_of_state_dependent_leakage_states_in_export, char_settings, integer);
+  define(nldm_input_cap_method, char_settings, integer);
+  define(nldm_input_cap_rel_target_fall, char_settings, string);
+  define(nldm_input_cap_rel_target_rise, char_settings, string);
+  define(nldm_input_cap_rel_trigger_fall, char_settings, string);
+  define(nldm_input_cap_rel_trigger_rise, char_settings, string);
+  define(random_state_dependent_leakage_amount, char_settings, integer);
+  define(random_state_dependent_leakage_select, char_settings, boolean);
+  define(ripple_targ, char_settings, string);
+  define(ripple_targ_err, char_settings, string);
+  define(sensitization_timing_power, char_settings, string);
+  define(subtract_switching_power_method, char_settings, string);
+  define(tran_based_leakage_pw, char_settings, string);
+  define(tran_based_leakage_step_size, char_settings, string);
+  define(tristate_pulling_resistance_scaling, char_settings, string);
+  define(use_bisect_targ_as_abs_value, char_settings, boolean);
+  define(use_pwl_supplies_for_cmb, char_settings, boolean);
+  define(use_pwl_supplies_for_seq, char_settings, boolean);
+  define(worst_case_settling_time, char_settings, string);
+  define(accuracy_leak_tran, char_settings, string);
+  define(accuracy_opt, char_settings, string);
+  define(accuracy_tran, char_settings, string);
+  define(ccs_timing, char_settings, boolean);
+  define(custom_step_size_leak_tran, char_settings, string);
+  define(custom_step_size_opt, char_settings, string);
+  define(custom_step_size_tran, char_settings, string);
+  define(ecsm_timing, char_settings, boolean);
+  define(enable_3d_power, char_settings, boolean);
+  define(enable_3d_timing, char_settings, boolean);
+  define(modelcards_md5, char_settings, string);
+  define(omit_dont_care_from_sensitization, char_settings, boolean);
+  define(spice_tool, char_settings, string);
+  define(bisection_hspice_options, char_settings, string);
+  define(bisection_spectre_tolerance, char_settings, string);
+  define(custom, char_settings, string);
+
+  char_settings("export_liberty_template") {
+	add_pin_cap_to_lut_indexes : "true";
+  }
+
+  char_settings("spice_execution_template") {
+	spice_version : "5.5.2.C";
+  }
+
+  char_settings("spice_lookup_tables_template") {
+	constrained_measure_capacitance : "min";
+	input_slope_fall_level : "";
+	input_slope_fall_time : "";
+	input_slope_rise_level : "";
+	input_slope_rise_time : "";
+	power_integration_threshold : "90";
+  }
+
+  char_settings("spice_measure_template") {
+	arc_sensitization_reduction_threshold : 4;
+	bisect_targ : "0.05";
+	bisect_targ_err : "0.001";
+	bisection_itr_cnt : 20;
+	clear_preset_pw_char_settings : "0,1";
+	delay : "3e-09";
+	enable_comb_hidden_power : "true";
+	enable_comb_leakage : "true";
+	enable_comb_onehot_daat_timing_power : "true";
+	enable_comb_onehot_ts_timing_power : "false";
+	enable_comb_timing_power : "true";
+	enable_comb_tristate : "true";
+	enable_hot_setup_gated : "false";
+	enable_pulse_width : "true";
+	enable_recovery_removal : "true";
+	enable_seq_hidden_power : "true";
+	enable_seq_input_cap : "true";
+	enable_seq_leakage : "true";
+	enable_seq_timing_power : "true";
+	enable_setup_hold : "true";
+	export_conditional_constrained_timing : "false";
+	headroom : "1e-09";
+	max_no_of_hidden_power_states : 32;
+	max_no_of_state_dependent_leakage_states_in_export : 1600;
+	nldm_input_cap_method : 2;
+	nldm_input_cap_rel_target_fall : "50";
+	nldm_input_cap_rel_target_rise : "50";
+	nldm_input_cap_rel_trigger_fall : "99";
+	nldm_input_cap_rel_trigger_rise : "1";
+	random_state_dependent_leakage_amount : 512;
+	random_state_dependent_leakage_select : "true";
+	ripple_targ : "0.1";
+	ripple_targ_err : "0.025";
+	sensitization_timing_power : "state_binning";
+	subtract_switching_power_method : "rise_cycle";
+	tran_based_leakage_pw : "0.005";
+	tran_based_leakage_step_size : "tPW/100";
+	tristate_pulling_resistance_scaling : "20";
+	use_bisect_targ_as_abs_value : "false";
+	use_pwl_supplies_for_cmb : "false";
+	use_pwl_supplies_for_seq : "false";
+	worst_case_settling_time : "1e-08";
+  }
+
+  char_settings("spice_template") {
+	accuracy_leak_tran : "standard";
+	accuracy_opt : "high";
+	accuracy_tran : "high";
+	ccs_timing : "false";
+	custom_step_size_leak_tran : "0.5*tST";
+	custom_step_size_opt : "10 ps";
+	custom_step_size_tran : "1 ps";
+	ecsm_timing : "false";
+	enable_3d_power : "false";
+	enable_3d_timing : "false";
+	modelcards_md5 : "7nm_SS.pm,8d9f5b3f157054e98a0770f4a1039ef5";
+	omit_dont_care_from_sensitization : "true";
+	spice_tool : "Smartspice";
+  }
+
+  char_settings("spice_user_string_template") {
+	bisection_hspice_options : "relin=10m relout=BISECT_TARG_ERR itropt=BISECT_ITR_CNT";
+	bisection_spectre_tolerance : "tol = 10e-15";
+	custom : "";
+  }
+
+
+  char_config() {
+	internal_power_calculation : exclude_switching_on_rise;
+	driver_waveform (all, "input_driver:rise");
+	driver_waveform_rise : "input_driver:rise";
+	driver_waveform_fall : "input_driver:fall";
+	default_value_selection_method (all, max);
+	default_value_selection_method (capacitance, average);
+	capacitance_voltage_lower_threshold_pct_fall : 50.000000;
+	capacitance_voltage_upper_threshold_pct_fall : 99.000000;
+	capacitance_voltage_lower_threshold_pct_rise : 1.000000;
+	capacitance_voltage_upper_threshold_pct_rise : 50.000000;
+  }
+
+  lu_table_template(waveform_template) {
+	variable_1 : input_net_transition;
+	variable_2 : normalized_voltage;
+	index_1 ("0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0");
+	index_2 ("0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0");
+  }
+
+  normalized_driver_waveform (waveform_template) {
+	driver_waveform_name : "input_driver:rise";
+	index_1 ("0.000500, 0.003906, 0.007812, 0.015625, 0.031250, 0.062500, 0.125000, 0.250000");
+	index_2 ("0, 1");
+	values ( \
+	  "0.000000, 0.000500", \
+	  "0.000000, 0.003906", \
+	  "0.000000, 0.007812", \
+	  "0.000000, 0.015625", \
+	  "0.000000, 0.031250", \
+	  "0.000000, 0.062500", \
+	  "0.000000, 0.125000", \
+	  "0.000000, 0.250000" \
+	);
+  }
+
+  normalized_driver_waveform (waveform_template) {
+	driver_waveform_name : "input_driver:fall";
+	index_1 ("0.000500, 0.003906, 0.007812, 0.015625, 0.031250, 0.062500, 0.125000, 0.250000");
+	index_2 ("0, 1");
+	values ( \
+	  "0.000000, 0.000500", \
+	  "0.000000, 0.003906", \
+	  "0.000000, 0.007812", \
+	  "0.000000, 0.015625", \
+	  "0.000000, 0.031250", \
+	  "0.000000, 0.062500", \
+	  "0.000000, 0.125000", \
+	  "0.000000, 0.250000" \
+	);
+  }
+
+  normalized_driver_waveform (waveform_template) {
+	index_1 ("0.000500, 0.003906, 0.007812, 0.015625, 0.031250, 0.062500, 0.125000, 0.250000");
+	index_2 ("0, 1");
+	values ( \
+	  "0.000000, 0.000500", \
+	  "0.000000, 0.003906", \
+	  "0.000000, 0.007812", \
+	  "0.000000, 0.015625", \
+	  "0.000000, 0.031250", \
+	  "0.000000, 0.062500", \
+	  "0.000000, 0.125000", \
+	  "0.000000, 0.250000" \
+	);
+  }
+
+
+
+  power_lut_template (Hidden_power_clock_fall_7) {
+	variable_1 : input_transition_time;
+	index_1 ("0.0010,0.0020,0.0030,0.0040,0.0050,0.0060,0.0070");
+  }
+
+
+  power_lut_template (Hidden_power_clock_rise_7) {
+	variable_1 : input_transition_time;
+	index_1 ("0.0010,0.0020,0.0030,0.0040,0.0050,0.0060,0.0070");
+  }
+
+
+  power_lut_template (Hidden_power_data_fall_7) {
+	variable_1 : input_transition_time;
+	index_1 ("0.0010,0.0020,0.0030,0.0040,0.0050,0.0060,0.0070");
+  }
+
+
+  power_lut_template (Hidden_power_data_rise_7) {
+	variable_1 : input_transition_time;
+	index_1 ("0.0010,0.0020,0.0030,0.0040,0.0050,0.0060,0.0070");
+  }
+
+
+  power_lut_template (Hidden_power_set_reset_fall_7) {
+	variable_1 : input_transition_time;
+	index_1 ("0.0010,0.0020,0.0030,0.0040,0.0050,0.0060,0.0070");
+  }
+
+
+  power_lut_template (Hidden_power_set_reset_rise_7) {
+	variable_1 : input_transition_time;
+	index_1 ("0.0010,0.0020,0.0030,0.0040,0.0050,0.0060,0.0070");
+  }
+
+
+  lu_table_template (Hold_fall_fall_4_4) {
+	variable_1 : constrained_pin_transition;
+	variable_2 : related_pin_transition;
+	index_1 ("0.0010,0.0020,0.0030,0.0040");
+	index_2 ("0.0010,0.0020,0.0030,0.0040");
+  }
+
+
+  lu_table_template (Hold_fall_rise_4_4) {
+	variable_1 : constrained_pin_transition;
+	variable_2 : related_pin_transition;
+	index_1 ("0.0010,0.0020,0.0030,0.0040");
+	index_2 ("0.0010,0.0020,0.0030,0.0040");
+  }
+
+
+  lu_table_template (Hold_rise_fall_4_4) {
+	variable_1 : constrained_pin_transition;
+	variable_2 : related_pin_transition;
+	index_1 ("0.0010,0.0020,0.0030,0.0040");
+	index_2 ("0.0010,0.0020,0.0030,0.0040");
+  }
+
+
+  lu_table_template (Hold_rise_rise_4_4) {
+	variable_1 : constrained_pin_transition;
+	variable_2 : related_pin_transition;
+	index_1 ("0.0010,0.0020,0.0030,0.0040");
+	index_2 ("0.0010,0.0020,0.0030,0.0040");
+  }
+
+
+  power_lut_template (Power_clock_fall_7_7) {
+	variable_1 : input_transition_time;
+	variable_2 : total_output_net_capacitance;
+	index_1 ("0.0010,0.0020,0.0030,0.0040,0.0050,0.0060,0.0070");
+	index_2 ("0.0010,0.0020,0.0030,0.0040,0.0050,0.0060,0.0070");
+  }
+
+
+  power_lut_template (Power_clock_rise_7_7) {
+	variable_1 : input_transition_time;
+	variable_2 : total_output_net_capacitance;
+	index_1 ("0.0010,0.0020,0.0030,0.0040,0.0050,0.0060,0.0070");
+	index_2 ("0.0010,0.0020,0.0030,0.0040,0.0050,0.0060,0.0070");
+  }
+
+
+  power_lut_template (Power_data_fall_7_7) {
+	variable_1 : input_transition_time;
+	variable_2 : total_output_net_capacitance;
+	index_1 ("0.0010,0.0020,0.0030,0.0040,0.0050,0.0060,0.0070");
+	index_2 ("0.0010,0.0020,0.0030,0.0040,0.0050,0.0060,0.0070");
+  }
+
+
+  power_lut_template (Power_data_rise_7_7) {
+	variable_1 : input_transition_time;
+	variable_2 : total_output_net_capacitance;
+	index_1 ("0.0010,0.0020,0.0030,0.0040,0.0050,0.0060,0.0070");
+	index_2 ("0.0010,0.0020,0.0030,0.0040,0.0050,0.0060,0.0070");
+  }
+
+
+  power_lut_template (Power_set_reset_fall_7_7) {
+	variable_1 : input_transition_time;
+	variable_2 : total_output_net_capacitance;
+	index_1 ("0.0010,0.0020,0.0030,0.0040,0.0050,0.0060,0.0070");
+	index_2 ("0.0010,0.0020,0.0030,0.0040,0.0050,0.0060,0.0070");
+  }
+
+
+  power_lut_template (Power_set_reset_rise_7_7) {
+	variable_1 : input_transition_time;
+	variable_2 : total_output_net_capacitance;
+	index_1 ("0.0010,0.0020,0.0030,0.0040,0.0050,0.0060,0.0070");
+	index_2 ("0.0010,0.0020,0.0030,0.0040,0.0050,0.0060,0.0070");
+  }
+
+
+  lu_table_template (Pulse_width_clock_fall_4) {
+	variable_1 : related_pin_transition;
+	index_1 ("0.0010,0.0020,0.0030,0.0040");
+  }
+
+
+  lu_table_template (Pulse_width_clock_rise_4) {
+	variable_1 : related_pin_transition;
+	index_1 ("0.0010,0.0020,0.0030,0.0040");
+  }
+
+
+  lu_table_template (Pulse_width_set_reset_fall_4) {
+	variable_1 : related_pin_transition;
+	index_1 ("0.0010,0.0020,0.0030,0.0040");
+  }
+
+
+  lu_table_template (Pulse_width_set_reset_rise_4) {
+	variable_1 : related_pin_transition;
+	index_1 ("0.0010,0.0020,0.0030,0.0040");
+  }
+
+
+  lu_table_template (Recovery_fall_fall_4_4) {
+	variable_1 : constrained_pin_transition;
+	variable_2 : related_pin_transition;
+	index_1 ("0.0010,0.0020,0.0030,0.0040");
+	index_2 ("0.0010,0.0020,0.0030,0.0040");
+  }
+
+
+  lu_table_template (Recovery_fall_rise_4_4) {
+	variable_1 : constrained_pin_transition;
+	variable_2 : related_pin_transition;
+	index_1 ("0.0010,0.0020,0.0030,0.0040");
+	index_2 ("0.0010,0.0020,0.0030,0.0040");
+  }
+
+
+  lu_table_template (Recovery_rise_fall_4_4) {
+	variable_1 : constrained_pin_transition;
+	variable_2 : related_pin_transition;
+	index_1 ("0.0010,0.0020,0.0030,0.0040");
+	index_2 ("0.0010,0.0020,0.0030,0.0040");
+  }
+
+
+  lu_table_template (Recovery_rise_rise_4_4) {
+	variable_1 : constrained_pin_transition;
+	variable_2 : related_pin_transition;
+	index_1 ("0.0010,0.0020,0.0030,0.0040");
+	index_2 ("0.0010,0.0020,0.0030,0.0040");
+  }
+
+
+  lu_table_template (Removal_fall_fall_4_4) {
+	variable_1 : constrained_pin_transition;
+	variable_2 : related_pin_transition;
+	index_1 ("0.0010,0.0020,0.0030,0.0040");
+	index_2 ("0.0010,0.0020,0.0030,0.0040");
+  }
+
+
+  lu_table_template (Removal_fall_rise_4_4) {
+	variable_1 : constrained_pin_transition;
+	variable_2 : related_pin_transition;
+	index_1 ("0.0010,0.0020,0.0030,0.0040");
+	index_2 ("0.0010,0.0020,0.0030,0.0040");
+  }
+
+
+  lu_table_template (Removal_rise_fall_4_4) {
+	variable_1 : constrained_pin_transition;
+	variable_2 : related_pin_transition;
+	index_1 ("0.0010,0.0020,0.0030,0.0040");
+	index_2 ("0.0010,0.0020,0.0030,0.0040");
+  }
+
+
+  lu_table_template (Removal_rise_rise_4_4) {
+	variable_1 : constrained_pin_transition;
+	variable_2 : related_pin_transition;
+	index_1 ("0.0010,0.0020,0.0030,0.0040");
+	index_2 ("0.0010,0.0020,0.0030,0.0040");
+  }
+
+
+  lu_table_template (Setup_fall_fall_4_4) {
+	variable_1 : constrained_pin_transition;
+	variable_2 : related_pin_transition;
+	index_1 ("0.0010,0.0020,0.0030,0.0040");
+	index_2 ("0.0010,0.0020,0.0030,0.0040");
+  }
+
+
+  lu_table_template (Setup_fall_rise_4_4) {
+	variable_1 : constrained_pin_transition;
+	variable_2 : related_pin_transition;
+	index_1 ("0.0010,0.0020,0.0030,0.0040");
+	index_2 ("0.0010,0.0020,0.0030,0.0040");
+  }
+
+
+  lu_table_template (Setup_rise_fall_4_4) {
+	variable_1 : constrained_pin_transition;
+	variable_2 : related_pin_transition;
+	index_1 ("0.0010,0.0020,0.0030,0.0040");
+	index_2 ("0.0010,0.0020,0.0030,0.0040");
+  }
+
+
+  lu_table_template (Setup_rise_rise_4_4) {
+	variable_1 : constrained_pin_transition;
+	variable_2 : related_pin_transition;
+	index_1 ("0.0010,0.0020,0.0030,0.0040");
+	index_2 ("0.0010,0.0020,0.0030,0.0040");
+  }
+
+
+  lu_table_template (Sr_hold_fall_fall_4_4) {
+	variable_1 : constrained_pin_transition;
+	variable_2 : related_pin_transition;
+	index_1 ("0.0010,0.0020,0.0030,0.0040");
+	index_2 ("0.0010,0.0020,0.0030,0.0040");
+  }
+
+
+  lu_table_template (Sr_hold_fall_rise_4_4) {
+	variable_1 : constrained_pin_transition;
+	variable_2 : related_pin_transition;
+	index_1 ("0.0010,0.0020,0.0030,0.0040");
+	index_2 ("0.0010,0.0020,0.0030,0.0040");
+  }
+
+
+  lu_table_template (Sr_hold_rise_fall_4_4) {
+	variable_1 : constrained_pin_transition;
+	variable_2 : related_pin_transition;
+	index_1 ("0.0010,0.0020,0.0030,0.0040");
+	index_2 ("0.0010,0.0020,0.0030,0.0040");
+  }
+
+
+  lu_table_template (Sr_hold_rise_rise_4_4) {
+	variable_1 : constrained_pin_transition;
+	variable_2 : related_pin_transition;
+	index_1 ("0.0010,0.0020,0.0030,0.0040");
+	index_2 ("0.0010,0.0020,0.0030,0.0040");
+  }
+
+
+  lu_table_template (Sr_setup_fall_fall_4_4) {
+	variable_1 : constrained_pin_transition;
+	variable_2 : related_pin_transition;
+	index_1 ("0.0010,0.0020,0.0030,0.0040");
+	index_2 ("0.0010,0.0020,0.0030,0.0040");
+  }
+
+
+  lu_table_template (Sr_setup_fall_rise_4_4) {
+	variable_1 : constrained_pin_transition;
+	variable_2 : related_pin_transition;
+	index_1 ("0.0010,0.0020,0.0030,0.0040");
+	index_2 ("0.0010,0.0020,0.0030,0.0040");
+  }
+
+
+  lu_table_template (Sr_setup_rise_fall_4_4) {
+	variable_1 : constrained_pin_transition;
+	variable_2 : related_pin_transition;
+	index_1 ("0.0010,0.0020,0.0030,0.0040");
+	index_2 ("0.0010,0.0020,0.0030,0.0040");
+  }
+
+
+  lu_table_template (Sr_setup_rise_rise_4_4) {
+	variable_1 : constrained_pin_transition;
+	variable_2 : related_pin_transition;
+	index_1 ("0.0010,0.0020,0.0030,0.0040");
+	index_2 ("0.0010,0.0020,0.0030,0.0040");
+  }
+
+
+  lu_table_template (Timing_clock_fall_7_7) {
+	variable_1 : input_net_transition;
+	variable_2 : total_output_net_capacitance;
+	index_1 ("0.0010,0.0020,0.0030,0.0040,0.0050,0.0060,0.0070");
+	index_2 ("0.0010,0.0020,0.0030,0.0040,0.0050,0.0060,0.0070");
+  }
+
+
+  lu_table_template (Timing_clock_rise_7_7) {
+	variable_1 : input_net_transition;
+	variable_2 : total_output_net_capacitance;
+	index_1 ("0.0010,0.0020,0.0030,0.0040,0.0050,0.0060,0.0070");
+	index_2 ("0.0010,0.0020,0.0030,0.0040,0.0050,0.0060,0.0070");
+  }
+
+
+  lu_table_template (Timing_data_fall_7_7) {
+	variable_1 : input_net_transition;
+	variable_2 : total_output_net_capacitance;
+	index_1 ("0.0010,0.0020,0.0030,0.0040,0.0050,0.0060,0.0070");
+	index_2 ("0.0010,0.0020,0.0030,0.0040,0.0050,0.0060,0.0070");
+  }
+
+
+  lu_table_template (Timing_data_rise_7_7) {
+	variable_1 : input_net_transition;
+	variable_2 : total_output_net_capacitance;
+	index_1 ("0.0010,0.0020,0.0030,0.0040,0.0050,0.0060,0.0070");
+	index_2 ("0.0010,0.0020,0.0030,0.0040,0.0050,0.0060,0.0070");
+  }
+
+
+  lu_table_template (Timing_set_reset_fall_7_7) {
+	variable_1 : input_net_transition;
+	variable_2 : total_output_net_capacitance;
+	index_1 ("0.0010,0.0020,0.0030,0.0040,0.0050,0.0060,0.0070");
+	index_2 ("0.0010,0.0020,0.0030,0.0040,0.0050,0.0060,0.0070");
+  }
+
+
+  lu_table_template (Timing_set_reset_rise_7_7) {
+	variable_1 : input_net_transition;
+	variable_2 : total_output_net_capacitance;
+	index_1 ("0.0010,0.0020,0.0030,0.0040,0.0050,0.0060,0.0070");
+	index_2 ("0.0010,0.0020,0.0030,0.0040,0.0050,0.0060,0.0070");
+  }
+
+
+  lu_table_template (Tristate_disable_fall_7) {
+	variable_1 : input_net_transition;
+	index_1 ("0.0010,0.0020,0.0030,0.0040,0.0050,0.0060,0.0070");
+  }
+
+
+  lu_table_template (Tristate_disable_rise_7) {
+	variable_1 : input_net_transition;
+	index_1 ("0.0010,0.0020,0.0030,0.0040,0.0050,0.0060,0.0070");
+  }
+
+
+  /******************************************************************************************
+   Module          	: C2MOS_FF
+   Cell Description	: Pos. edge D-Flip-Flop with drive strength X1
+  *******************************************************************************************/
+
+  cell (C2MOS_FF) {
+
+	ff ("IQ" , "IQN") {
+		next_state         	: "D";
+		clocked_on         	: "CLK";
+		power_down_function	: "(!VDD | VSS)";
+	}
+
+	drive_strength	: 1;
+
+	area               	: 0.364500;
+	pg_pin(VDD) {
+		voltage_name : VDD;
+		pg_type      : primary_power;
+	}
+	pg_pin(VSS) {
+		voltage_name : VSS;
+		pg_type      : primary_ground;
+	}
+
+	leakage_power () {
+		related_pg_pin : "VDD";
+		value          : 3148.040201;
+	}
+	leakage_power () {
+		related_pg_pin : "VSS";
+		value          : 0.000000;
+	}
+	leakage_power () {
+		related_pg_pin : "VDD";
+		when           : "!CLK & !D & !Q";
+		value          : 3190.227296;
+	}
+	leakage_power () {
+		related_pg_pin : "VSS";
+		when           : "!CLK & !D & !Q";
+		value          : 0.000000;
+	}
+	leakage_power () {
+		related_pg_pin : "VDD";
+		when           : "!CLK & !D & Q";
+		value          : 3158.543069;
+	}
+	leakage_power () {
+		related_pg_pin : "VSS";
+		when           : "!CLK & !D & Q";
+		value          : 0.000000;
+	}
+	leakage_power () {
+		related_pg_pin : "VDD";
+		when           : "!CLK & D & !Q";
+		value          : 4042.080569;
+	}
+	leakage_power () {
+		related_pg_pin : "VSS";
+		when           : "!CLK & D & !Q";
+		value          : 0.000000;
+	}
+	leakage_power () {
+		related_pg_pin : "VDD";
+		when           : "!CLK & D & Q";
+		value          : 3073.617311;
+	}
+	leakage_power () {
+		related_pg_pin : "VSS";
+		when           : "!CLK & D & Q";
+		value          : 0.000000;
+	}
+	leakage_power () {
+		related_pg_pin : "VDD";
+		when           : "CLK & !D & !Q";
+		value          : 2824.042428;
+	}
+	leakage_power () {
+		related_pg_pin : "VSS";
+		when           : "CLK & !D & !Q";
+		value          : 0.000000;
+	}
+	leakage_power () {
+		related_pg_pin : "VDD";
+		when           : "CLK & !D & Q";
+		value          : 3199.600728;
+	}
+	leakage_power () {
+		related_pg_pin : "VSS";
+		when           : "CLK & !D & Q";
+		value          : 0.000000;
+	}
+	leakage_power () {
+		related_pg_pin : "VDD";
+		when           : "CLK & D & !Q";
+		value          : 3097.841986;
+	}
+	leakage_power () {
+		related_pg_pin : "VSS";
+		when           : "CLK & D & !Q";
+		value          : 0.000000;
+	}
+	leakage_power () {
+		related_pg_pin : "VDD";
+		when           : "CLK & D & Q";
+		value          : 2598.368219;
+	}
+	leakage_power () {
+		related_pg_pin : "VSS";
+		when           : "CLK & D & Q";
+		value          : 0.000000;
+	}
+
+	pin (D) {
+		direction		: input;
+		input_signal_level		: VDD;
+		input_voltage		: default_VDD_VSS_input;
+		related_power_pin	: "VDD";
+		related_ground_pin	: "VSS";
+		capacitance		: 0.000410;
+		fall_capacitance	: 0.000405;
+		rise_capacitance	: 0.000415;
+
+		timing () {
+
+			related_pin        : "CLK";
+			timing_type        : hold_rising;
+			fall_constraint(Hold_fall_rise_4_4) {
+				index_1 ("0.001000,0.125000,0.250000,0.500000");
+				index_2 ("0.001000,0.062500,0.125000,0.250000");
+				values ("0.014138,0.030784,0.042372,0.058155", \
+				        "0.000680,0.018633,0.032022,0.050026", \
+				        "-0.003951,0.013572,0.028608,0.048671", \
+				        "-0.009586,0.006698,0.022761,0.046164");
+			}
+			rise_constraint(Hold_rise_rise_4_4) {
+				index_1 ("0.001000,0.125000,0.250000,0.500000");
+				index_2 ("0.001000,0.062500,0.125000,0.250000");
+				values ("-0.005434,0.003458,0.008148,0.014618", \
+				        "-0.023157,-0.012621,-0.007403,-0.000581", \
+				        "-0.032023,-0.020519,-0.015028,-0.007749", \
+				        "-0.044739,-0.033176,-0.027460,-0.019994");
+			}
+		}
+
+		timing () {
+
+			related_pin        : "CLK";
+			timing_type        : setup_rising;
+			fall_constraint(Setup_fall_rise_4_4) {
+				index_1 ("0.001000,0.125000,0.250000,0.500000");
+				index_2 ("0.001000,0.062500,0.125000,0.250000");
+				values ("0.003503,-0.015178,-0.028612,-0.046504", \
+				        "0.025725,0.006669,-0.007870,-0.028429", \
+				        "0.039127,0.019477,0.004770,-0.016865", \
+				        "0.056934,0.036564,0.021545,-0.000749");
+			}
+			rise_constraint(Setup_rise_rise_4_4) {
+				index_1 ("0.001000,0.125000,0.250000,0.500000");
+				index_2 ("0.001000,0.062500,0.125000,0.250000");
+				values ("0.016655,0.003592,-0.001888,-0.009188", \
+				        "0.037555,0.022136,0.015299,0.007251", \
+				        "0.049475,0.032843,0.024862,0.015755", \
+				        "0.066840,0.049505,0.040473,0.030138");
+			}
+		}
+
+		internal_power () {
+
+			related_pg_pin : "VDD";
+			when          	: "!CLK & !Q";
+
+			fall_power(Hidden_power_data_fall_7) {
+				index_1 ("0.001000,0.015625,0.031250,0.062500,0.125000,0.250000,0.500000");
+				values ("0.000381,0.000371,0.000369,0.000370,0.000384,0.000433,0.000548");
+			}
+			rise_power(Hidden_power_data_rise_7) {
+				index_1 ("0.001000,0.015625,0.031250,0.062500,0.125000,0.250000,0.500000");
+				values ("0.000211,0.000203,0.000201,0.000201,0.000211,0.000249,0.000357");
+			}
+
+		}
+
+		internal_power () {
+
+			related_pg_pin : "VDD";
+			when          	: "!CLK & Q";
+
+			fall_power(Hidden_power_data_fall_7) {
+				index_1 ("0.001000,0.015625,0.031250,0.062500,0.125000,0.250000,0.500000");
+				values ("0.000385,0.000374,0.000372,0.000373,0.000387,0.000436,0.000551");
+			}
+			rise_power(Hidden_power_data_rise_7) {
+				index_1 ("0.001000,0.015625,0.031250,0.062500,0.125000,0.250000,0.500000");
+				values ("0.000206,0.000198,0.000196,0.000196,0.000206,0.000245,0.000353");
+			}
+
+		}
+
+		internal_power () {
+
+			related_pg_pin : "VDD";
+			when          	: "CLK & !Q";
+
+			fall_power(Hidden_power_data_fall_7) {
+				index_1 ("0.001000,0.015625,0.031250,0.062500,0.125000,0.250000,0.500000");
+				values ("0.000076,0.000069,0.000068,0.000067,0.000067,0.000067,0.000066");
+			}
+			rise_power(Hidden_power_data_rise_7) {
+				index_1 ("0.001000,0.015625,0.031250,0.062500,0.125000,0.250000,0.500000");
+				values ("-0.000037,-0.000037,-0.000037,-0.000037,-0.000038,-0.000038,-0.000039");
+			}
+
+		}
+
+		internal_power () {
+
+			related_pg_pin : "VDD";
+			when          	: "CLK & Q";
+
+			fall_power(Hidden_power_data_fall_7) {
+				index_1 ("0.001000,0.015625,0.031250,0.062500,0.125000,0.250000,0.500000");
+				values ("0.000063,0.000063,0.000063,0.000063,0.000064,0.000064,0.000064");
+			}
+			rise_power(Hidden_power_data_rise_7) {
+				index_1 ("0.001000,0.015625,0.031250,0.062500,0.125000,0.250000,0.500000");
+				values ("-0.000031,-0.000031,-0.000031,-0.000031,-0.000031,-0.000032,-0.000033");
+			}
+
+		}
+	}
+
+	pin (CLK) {
+		direction		: input;
+		input_signal_level		: VDD;
+		input_voltage		: default_VDD_VSS_input;
+		related_power_pin	: "VDD";
+		related_ground_pin	: "VSS";
+		clock   		: true;
+		capacitance		: 0.000300;
+		fall_capacitance	: 0.000301;
+		rise_capacitance	: 0.000299;
+
+		timing () {
+
+			related_pin        : "CLK";
+			timing_type        : min_pulse_width;
+			fall_constraint(Pulse_width_clock_rise_4) {
+				index_1 ("0.001000,0.062500,0.125000,0.250000");
+				values ("0.037099,0.053610,0.070552,0.125500");
+			}
+			rise_constraint(Pulse_width_clock_rise_4) {
+				index_1 ("0.001000,0.062500,0.125000,0.250000");
+				values ("0.037160,0.052164,0.071741,0.125500");
+			}
+		}
+
+		internal_power () {
+
+			related_pg_pin : "VDD";
+			when          	: "!D & !Q";
+
+			fall_power(Hidden_power_clock_fall_7) {
+				index_1 ("0.001000,0.0078125,0.015625,0.031250,0.062500,0.125000,0.250000");
+				values ("0.000554,0.000546,0.000541,0.000536,0.000537,0.000550,0.000587");
+			}
+			rise_power(Hidden_power_clock_rise_7) {
+				index_1 ("0.001000,0.0078125,0.015625,0.031250,0.062500,0.125000,0.250000");
+				values ("0.000370,0.000364,0.000359,0.000353,0.000350,0.000362,0.000394");
+			}
+
+		}
+
+		internal_power () {
+
+			related_pg_pin : "VDD";
+			when          	: "!D & Q";
+
+			fall_power(Hidden_power_clock_fall_7) {
+				index_1 ("0.001000,0.0078125,0.015625,0.031250,0.062500,0.125000,0.250000");
+				values ("0.000903,0.000895,0.000890,0.000886,0.000885,0.000895,0.000931");
+			}
+			rise_power(scalar) {values ("0.0");
+			}
+
+		}
+
+		internal_power () {
+
+			related_pg_pin : "VDD";
+			when          	: "D & !Q";
+
+			fall_power(Hidden_power_clock_fall_7) {
+				index_1 ("0.001000,0.0078125,0.015625,0.031250,0.062500,0.125000,0.250000");
+				values ("0.000748,0.000740,0.000735,0.000729,0.000728,0.000742,0.000785");
+			}
+			rise_power(scalar) {values ("0.0");
+			}
+
+		}
+
+		internal_power () {
+
+			related_pg_pin : "VDD";
+			when          	: "D & Q";
+
+			fall_power(Hidden_power_clock_fall_7) {
+				index_1 ("0.001000,0.0078125,0.015625,0.031250,0.062500,0.125000,0.250000");
+				values ("0.000536,0.000528,0.000523,0.000519,0.000519,0.000532,0.000569");
+			}
+			rise_power(Hidden_power_clock_rise_7) {
+				index_1 ("0.001000,0.0078125,0.015625,0.031250,0.062500,0.125000,0.250000");
+				values ("0.000380,0.000374,0.000369,0.000364,0.000361,0.000372,0.000404");
+			}
+
+		}
+	}
+
+	pin (Q) {
+		direction		: output;
+		output_voltage		: default_VDD_VSS_output;
+		related_power_pin	: "VDD";
+		related_ground_pin	: "VSS";
+		max_capacitance		: 0.025655;
+		function		: "IQ";
+		power_down_function	: "(!VDD | VSS)";
+
+		timing () {
+
+			related_pin        : "CLK";
+			timing_type        : rising_edge;
+			timing_sense       : non_unate;
+
+			cell_fall(Timing_clock_rise_7_7) {
+				index_1 ("0.001000,0.0078125,0.015625,0.031250,0.062500,0.125000,0.250000");
+				index_2 ("0.000100,0.003125,0.006250,0.012500,0.025000,0.050000,0.100000");
+				values ("0.073988,0.095621,0.111717,0.142301,0.202994,0.325023,0.568286", \
+				        "0.075916,0.097556,0.113666,0.144301,0.205121,0.326527,0.568224", \
+				        "0.078234,0.099887,0.115986,0.146617,0.207458,0.329729,0.572703", \
+				        "0.082973,0.104617,0.120728,0.151340,0.212074,0.333282,0.575994", \
+				        "0.091457,0.113111,0.129211,0.159840,0.220674,0.342962,0.585958", \
+				        "0.104175,0.125829,0.141919,0.172521,0.233255,0.355660,0.598685", \
+				        "0.122242,0.143885,0.159987,0.190572,0.251285,0.372929,0.615014");
+			}
+			cell_rise(Timing_clock_rise_7_7) {
+				index_1 ("0.001000,0.0078125,0.015625,0.031250,0.062500,0.125000,0.250000");
+				index_2 ("0.000100,0.003125,0.006250,0.012500,0.025000,0.050000,0.100000");
+				values ("0.061680,0.085561,0.105857,0.146052,0.226481,0.387276,0.708487", \
+				        "0.063654,0.087537,0.107836,0.148016,0.228494,0.389334,0.710505", \
+				        "0.065986,0.089869,0.110192,0.150412,0.230687,0.391413,0.712620", \
+				        "0.070714,0.094598,0.114916,0.155129,0.235456,0.396216,0.717432", \
+				        "0.079284,0.103166,0.123497,0.163567,0.244145,0.404836,0.725524", \
+				        "0.092213,0.116082,0.136452,0.176615,0.256975,0.417327,0.737110", \
+				        "0.110570,0.134390,0.154746,0.194945,0.275273,0.435950,0.757213");
+			}
+			fall_transition(Timing_clock_rise_7_7) {
+				index_1 ("0.001000,0.0078125,0.015625,0.031250,0.062500,0.125000,0.250000");
+				index_2 ("0.000100,0.003125,0.006250,0.012500,0.025000,0.050000,0.100000");
+				values ("0.011203,0.035239,0.060624,0.113395,0.223312,0.440343,0.872302", \
+				        "0.011219,0.035350,0.060410,0.114008,0.222251,0.443564,0.880412", \
+				        "0.011176,0.035255,0.060710,0.113765,0.222891,0.442585,0.878652", \
+				        "0.011209,0.035377,0.060479,0.113870,0.222792,0.443160,0.879558", \
+				        "0.011165,0.035273,0.060712,0.113875,0.222961,0.442473,0.878508", \
+				        "0.011204,0.035380,0.060525,0.113685,0.222856,0.442308,0.878276", \
+				        "0.011162,0.035320,0.060460,0.113329,0.222460,0.442090,0.880569");
+			}
+			rise_transition(Timing_clock_rise_7_7) {
+				index_1 ("0.001000,0.0078125,0.015625,0.031250,0.062500,0.125000,0.250000");
+				index_2 ("0.000100,0.003125,0.006250,0.012500,0.025000,0.050000,0.100000");
+				values ("0.010890,0.044246,0.081209,0.158856,0.309898,0.615588,1.222666", \
+				        "0.010840,0.044249,0.081222,0.158819,0.309383,0.614412,1.219989", \
+				        "0.010856,0.044328,0.081502,0.158933,0.310774,0.616864,1.225397", \
+				        "0.010871,0.044307,0.081453,0.158928,0.310484,0.616403,1.224370", \
+				        "0.010807,0.044275,0.081879,0.158145,0.310148,0.616276,1.231299", \
+				        "0.010861,0.044413,0.082091,0.157544,0.311932,0.619843,1.235742", \
+				        "0.010976,0.044176,0.081185,0.158705,0.310723,0.616792,1.224777");
+			}
+		}
+
+		internal_power () {
+
+			related_pin	         : "CLK";
+			related_pg_pin : "VDD";
+			fall_power(Power_clock_rise_7_7) {
+				index_1 ("0.001000,0.0078125,0.015625,0.031250,0.062500,0.125000,0.250000");
+				index_2 ("0.000100,0.003125,0.006250,0.012500,0.025000,0.050000,0.100000");
+				values ("0.000687,0.000766,0.000775,0.000780,0.000783,0.000785,0.000786", \
+				        "0.000679,0.000758,0.000768,0.000773,0.000777,0.000778,0.000779", \
+				        "0.000675,0.000754,0.000763,0.000769,0.000772,0.000773,0.000774", \
+				        "0.000669,0.000748,0.000758,0.000763,0.000766,0.000768,0.000769", \
+				        "0.000668,0.000747,0.000756,0.000761,0.000765,0.000766,0.000767", \
+				        "0.000678,0.000757,0.000768,0.000774,0.000775,0.000779,0.000780", \
+				        "0.000716,0.000797,0.000804,0.000810,0.000816,0.000815,0.000817");
+			}
+			rise_power(Power_clock_rise_7_7) {
+				index_1 ("0.001000,0.0078125,0.015625,0.031250,0.062500,0.125000,0.250000");
+				index_2 ("0.000100,0.003125,0.006250,0.012500,0.025000,0.050000,0.100000");
+				values ("0.000672,0.000736,0.000748,0.000755,0.000786,0.000830,0.000919", \
+				        "0.000666,0.000731,0.000742,0.000748,0.000781,0.000826,0.000917", \
+				        "0.000662,0.000726,0.000738,0.000750,0.000774,0.000816,0.000904", \
+				        "0.000656,0.000721,0.000732,0.000743,0.000769,0.000812,0.000901", \
+				        "0.000651,0.000714,0.000727,0.000740,0.000769,0.000819,0.000915", \
+				        "0.000660,0.000723,0.000735,0.000751,0.000779,0.000830,0.000897", \
+				        "0.000690,0.000755,0.000761,0.000779,0.000802,0.000844,0.000933");
+			}
+		}
+	}
+
+  }
+
+
+  /******************************************************************************************
+   Module          	: TG_FF
+   Cell Description	: Pos. edge D-Flip-Flop with drive strength X1
+  *******************************************************************************************/
+
+  cell (TG_FF) {
+
+	ff ("IQ" , "IQN") {
+		next_state         	: "D";
+		clocked_on         	: "CLK";
+		power_down_function	: "(!VDD | VSS)";
+	}
+
+	drive_strength	: 1;
+
+	area               	: 0.364500;
+	pg_pin(VDD) {
+		voltage_name : VDD;
+		pg_type      : primary_power;
+	}
+	pg_pin(VSS) {
+		voltage_name : VSS;
+		pg_type      : primary_ground;
+	}
+
+	leakage_power () {
+		related_pg_pin : "VDD";
+		value          : 5204.771796;
+	}
+	leakage_power () {
+		related_pg_pin : "VSS";
+		value          : 0.000000;
+	}
+	leakage_power () {
+		related_pg_pin : "VDD";
+		when           : "!CLK & !D & !Q";
+		value          : 4397.691234;
+	}
+	leakage_power () {
+		related_pg_pin : "VSS";
+		when           : "!CLK & !D & !Q";
+		value          : 0.000000;
+	}
+	leakage_power () {
+		related_pg_pin : "VDD";
+		when           : "!CLK & !D & Q";
+		value          : 5318.309875;
+	}
+	leakage_power () {
+		related_pg_pin : "VSS";
+		when           : "!CLK & !D & Q";
+		value          : 0.000000;
+	}
+	leakage_power () {
+		related_pg_pin : "VDD";
+		when           : "!CLK & D & !Q";
+		value          : 5988.531564;
+	}
+	leakage_power () {
+		related_pg_pin : "VSS";
+		when           : "!CLK & D & !Q";
+		value          : 0.000000;
+	}
+	leakage_power () {
+		related_pg_pin : "VDD";
+		when           : "!CLK & D & Q";
+		value          : 4098.924386;
+	}
+	leakage_power () {
+		related_pg_pin : "VSS";
+		when           : "!CLK & D & Q";
+		value          : 0.000000;
+	}
+	leakage_power () {
+		related_pg_pin : "VDD";
+		when           : "CLK & !D & !Q";
+		value          : 4606.797742;
+	}
+	leakage_power () {
+		related_pg_pin : "VSS";
+		when           : "CLK & !D & !Q";
+		value          : 0.000000;
+	}
+	leakage_power () {
+		related_pg_pin : "VDD";
+		when           : "CLK & !D & Q";
+		value          : 5809.268330;
+	}
+	leakage_power () {
+		related_pg_pin : "VSS";
+		when           : "CLK & !D & Q";
+		value          : 0.000000;
+	}
+	leakage_power () {
+		related_pg_pin : "VDD";
+		when           : "CLK & D & !Q";
+		value          : 6513.125187;
+	}
+	leakage_power () {
+		related_pg_pin : "VSS";
+		when           : "CLK & D & !Q";
+		value          : 0.000000;
+	}
+	leakage_power () {
+		related_pg_pin : "VDD";
+		when           : "CLK & D & Q";
+		value          : 4905.526049;
+	}
+	leakage_power () {
+		related_pg_pin : "VSS";
+		when           : "CLK & D & Q";
+		value          : 0.000000;
+	}
+
+	pin (D) {
+		direction		: input;
+		input_signal_level		: VDD;
+		input_voltage		: default_VDD_VSS_input;
+		related_power_pin	: "VDD";
+		related_ground_pin	: "VSS";
+		capacitance		: 0.000405;
+		fall_capacitance	: 0.000403;
+		rise_capacitance	: 0.000407;
+
+		timing () {
+
+			related_pin        : "CLK";
+			timing_type        : hold_rising;
+			fall_constraint(Hold_fall_rise_4_4) {
+				index_1 ("0.001000,0.125000,0.250000,0.500000");
+				index_2 ("0.001000,0.062500,0.125000,0.250000");
+				values ("-0.011050,-0.020358,-0.025617,-0.029942", \
+				        "-0.036371,-0.047178,-0.053818,-0.060209", \
+				        "-0.048283,-0.060364,-0.067964,-0.076354", \
+				        "-0.063617,-0.077494,-0.086244,-0.096887");
+			}
+			rise_constraint(Hold_rise_rise_4_4) {
+				index_1 ("0.001000,0.125000,0.250000,0.500000");
+				index_2 ("0.001000,0.062500,0.125000,0.250000");
+				values ("-0.005342,-0.000669,0.001911,0.005273", \
+				        "-0.026741,-0.023404,-0.019217,-0.014644", \
+				        "-0.035739,-0.035628,-0.030861,-0.025087", \
+				        "-0.046788,-0.052277,-0.047606,-0.039971");
+			}
+		}
+
+		timing () {
+
+			related_pin        : "CLK";
+			timing_type        : setup_rising;
+			fall_constraint(Setup_fall_rise_4_4) {
+				index_1 ("0.001000,0.125000,0.250000,0.500000");
+				index_2 ("0.001000,0.062500,0.125000,0.250000");
+				values ("0.032376,0.039703,0.047442,0.056575", \
+				        "0.062573,0.068767,0.076086,0.086080", \
+				        "0.079918,0.084983,0.092026,0.102740", \
+				        "0.103143,0.106640,0.113413,0.124721");
+			}
+			rise_constraint(Setup_rise_rise_4_4) {
+				index_1 ("0.001000,0.125000,0.250000,0.500000");
+				index_2 ("0.001000,0.062500,0.125000,0.250000");
+				values ("0.025097,0.012818,0.007298,0.001926", \
+				        "0.052874,0.039585,0.031410,0.024282", \
+				        "0.069742,0.056509,0.046699,0.037465", \
+				        "0.093030,0.081124,0.069874,0.057645");
+			}
+		}
+
+		internal_power () {
+
+			related_pg_pin : "VDD";
+			when          	: "!CLK & !Q";
+
+			fall_power(Hidden_power_data_fall_7) {
+				index_1 ("0.001000,0.015625,0.031250,0.062500,0.125000,0.250000,0.500000");
+				values ("0.000599,0.000585,0.000584,0.000591,0.000614,0.000674,0.000810");
+			}
+			rise_power(Hidden_power_data_rise_7) {
+				index_1 ("0.001000,0.015625,0.031250,0.062500,0.125000,0.250000,0.500000");
+				values ("0.000456,0.000443,0.000441,0.000444,0.000463,0.000517,0.000645");
+			}
+
+		}
+
+		internal_power () {
+
+			related_pg_pin : "VDD";
+			when          	: "!CLK & Q";
+
+			fall_power(Hidden_power_data_fall_7) {
+				index_1 ("0.001000,0.015625,0.031250,0.062500,0.125000,0.250000,0.500000");
+				values ("0.000604,0.000591,0.000589,0.000597,0.000620,0.000679,0.000816");
+			}
+			rise_power(Hidden_power_data_rise_7) {
+				index_1 ("0.001000,0.015625,0.031250,0.062500,0.125000,0.250000,0.500000");
+				values ("0.000423,0.000410,0.000408,0.000411,0.000431,0.000486,0.000614");
+			}
+
+		}
+
+		internal_power () {
+
+			related_pg_pin : "VDD";
+			when          	: "CLK & !Q";
+
+			fall_power(Hidden_power_data_fall_7) {
+				index_1 ("0.001000,0.015625,0.031250,0.062500,0.125000,0.250000,0.500000");
+				values ("0.000263,0.000245,0.000250,0.000261,0.000291,0.000356,0.000496");
+			}
+			rise_power(Hidden_power_data_rise_7) {
+				index_1 ("0.001000,0.015625,0.031250,0.062500,0.125000,0.250000,0.500000");
+				values ("-0.000024,-0.000042,-0.000042,-0.000032,-0.000004,0.000060,0.000199");
+			}
+
+		}
+
+		internal_power () {
+
+			related_pg_pin : "VDD";
+			when          	: "CLK & Q";
+
+			fall_power(Hidden_power_data_fall_7) {
+				index_1 ("0.001000,0.015625,0.031250,0.062500,0.125000,0.250000,0.500000");
+				values ("0.000267,0.000249,0.000254,0.000265,0.000295,0.000360,0.000499");
+			}
+			rise_power(Hidden_power_data_rise_7) {
+				index_1 ("0.001000,0.015625,0.031250,0.062500,0.125000,0.250000,0.500000");
+				values ("-0.000028,-0.000046,-0.000045,-0.000035,-0.000008,0.000056,0.000196");
+			}
+
+		}
+	}
+
+	pin (CLK) {
+		direction		: input;
+		input_signal_level		: VDD;
+		input_voltage		: default_VDD_VSS_input;
+		related_power_pin	: "VDD";
+		related_ground_pin	: "VSS";
+		clock   		: true;
+		capacitance		: 0.001057;
+		fall_capacitance	: 0.001062;
+		rise_capacitance	: 0.001053;
+
+		timing () {
+
+			related_pin        : "CLK";
+			timing_type        : min_pulse_width;
+			fall_constraint(Pulse_width_clock_rise_4) {
+				index_1 ("0.001000,0.062500,0.125000,0.250000");
+				values ("0.033099,0.047144,0.063000,0.125500");
+			}
+			rise_constraint(Pulse_width_clock_rise_4) {
+				index_1 ("0.001000,0.062500,0.125000,0.250000");
+				values ("0.031785,0.047244,0.064064,0.125500");
+			}
+		}
+
+		internal_power () {
+
+			related_pg_pin : "VDD";
+			when          	: "!D & !Q";
+
+			fall_power(Hidden_power_clock_fall_7) {
+				index_1 ("0.001000,0.0078125,0.015625,0.031250,0.062500,0.125000,0.250000");
+				values ("0.000557,0.000535,0.000528,0.000526,0.000533,0.000557,0.000613");
+			}
+			rise_power(Hidden_power_clock_rise_7) {
+				index_1 ("0.001000,0.0078125,0.015625,0.031250,0.062500,0.125000,0.250000");
+				values ("0.000032,0.000014,0.000006,0.000000,0.000004,0.000023,0.000074");
+			}
+
+		}
+
+		internal_power () {
+
+			related_pg_pin : "VDD";
+			when          	: "!D & Q";
+
+			fall_power(Hidden_power_clock_fall_7) {
+				index_1 ("0.001000,0.0078125,0.015625,0.031250,0.062500,0.125000,0.250000");
+				values ("0.000984,0.000951,0.000936,0.000929,0.000940,0.000989,0.001107");
+			}
+			rise_power(scalar) {values ("0.0");
+			}
+
+		}
+
+		internal_power () {
+
+			related_pg_pin : "VDD";
+			when          	: "D & !Q";
+
+			fall_power(Hidden_power_clock_fall_7) {
+				index_1 ("0.001000,0.0078125,0.015625,0.031250,0.062500,0.125000,0.250000");
+				values ("0.001101,0.001081,0.001077,0.001083,0.001108,0.001161,0.001267");
+			}
+			rise_power(scalar) {values ("0.0");
+			}
+
+		}
+
+		internal_power () {
+
+			related_pg_pin : "VDD";
+			when          	: "D & Q";
+
+			fall_power(Hidden_power_clock_fall_7) {
+				index_1 ("0.001000,0.0078125,0.015625,0.031250,0.062500,0.125000,0.250000");
+				values ("0.000574,0.000554,0.000547,0.000546,0.000554,0.000578,0.000634");
+			}
+			rise_power(Hidden_power_clock_rise_7) {
+				index_1 ("0.001000,0.0078125,0.015625,0.031250,0.062500,0.125000,0.250000");
+				values ("-0.000011,-0.000028,-0.000036,-0.000040,-0.000036,-0.000015,0.000036");
+			}
+
+		}
+	}
+
+	pin (Q) {
+		direction		: output;
+		output_voltage		: default_VDD_VSS_output;
+		related_power_pin	: "VDD";
+		related_ground_pin	: "VSS";
+		max_capacitance		: 0.025623;
+		function		: "IQ";
+		power_down_function	: "(!VDD | VSS)";
+
+		timing () {
+
+			related_pin        : "CLK";
+			timing_type        : rising_edge;
+			timing_sense       : non_unate;
+
+			cell_fall(Timing_clock_rise_7_7) {
+				index_1 ("0.001000,0.0078125,0.015625,0.031250,0.062500,0.125000,0.250000");
+				index_2 ("0.000100,0.003125,0.006250,0.012500,0.025000,0.050000,0.100000");
+				values ("0.029124,0.046898,0.062215,0.092562,0.153150,0.274435,0.515784", \
+				        "0.030687,0.048462,0.063774,0.094033,0.154794,0.275475,0.518192", \
+				        "0.032846,0.050620,0.065934,0.096199,0.156935,0.278133,0.519693", \
+				        "0.037140,0.054918,0.070218,0.100593,0.161107,0.282459,0.523812", \
+				        "0.043647,0.061480,0.076822,0.107094,0.167809,0.288424,0.531104", \
+				        "0.052672,0.070504,0.085826,0.116108,0.176651,0.297469,0.539769", \
+				        "0.065700,0.083733,0.099074,0.129423,0.189722,0.310581,0.552123");
+			}
+			cell_rise(Timing_clock_rise_7_7) {
+				index_1 ("0.001000,0.0078125,0.015625,0.031250,0.062500,0.125000,0.250000");
+				index_2 ("0.000100,0.003125,0.006250,0.012500,0.025000,0.050000,0.100000");
+				values ("0.040539,0.062137,0.082298,0.122314,0.202651,0.362528,0.682454", \
+				        "0.042406,0.064002,0.084163,0.124178,0.204515,0.364400,0.684310", \
+				        "0.044782,0.066388,0.086511,0.126642,0.206626,0.366891,0.687426", \
+				        "0.049697,0.071306,0.091394,0.131554,0.211796,0.371381,0.692509", \
+				        "0.058818,0.080430,0.100589,0.140645,0.220478,0.381168,0.700759", \
+				        "0.071724,0.093280,0.113447,0.153516,0.233860,0.392966,0.714308", \
+				        "0.088613,0.110223,0.130325,0.170280,0.250208,0.411032,0.729841");
+			}
+			fall_transition(Timing_clock_rise_7_7) {
+				index_1 ("0.001000,0.0078125,0.015625,0.031250,0.062500,0.125000,0.250000");
+				index_2 ("0.000100,0.003125,0.006250,0.012500,0.025000,0.050000,0.100000");
+				values ("0.006569,0.030977,0.057538,0.111761,0.220777,0.435904,0.872666", \
+				        "0.006575,0.030980,0.057427,0.111632,0.220079,0.438437,0.868753", \
+				        "0.006584,0.030983,0.057426,0.111593,0.220241,0.436347,0.872169", \
+				        "0.006579,0.030930,0.057395,0.111493,0.220816,0.435744,0.872589", \
+				        "0.006705,0.030918,0.057581,0.111833,0.219745,0.438280,0.870255", \
+				        "0.006747,0.030845,0.057330,0.110999,0.218959,0.437010,0.872111", \
+				        "0.007061,0.031167,0.057393,0.110582,0.218858,0.435143,0.868616");
+			}
+			rise_transition(Timing_clock_rise_7_7) {
+				index_1 ("0.001000,0.0078125,0.015625,0.031250,0.062500,0.125000,0.250000");
+				index_2 ("0.000100,0.003125,0.006250,0.012500,0.025000,0.050000,0.100000");
+				values ("0.007660,0.042014,0.080232,0.157428,0.310093,0.615020,1.234470", \
+				        "0.007658,0.042016,0.080232,0.157423,0.310115,0.614977,1.234478", \
+				        "0.007667,0.042299,0.079814,0.156290,0.310230,0.618419,1.220114", \
+				        "0.007646,0.042232,0.080162,0.157369,0.308382,0.619019,1.222084", \
+				        "0.007665,0.042302,0.079858,0.155521,0.311276,0.615299,1.227074", \
+				        "0.007619,0.042030,0.080265,0.157710,0.307619,0.617920,1.228934", \
+				        "0.007702,0.042280,0.079746,0.155178,0.310775,0.614107,1.229944");
+			}
+		}
+
+		internal_power () {
+
+			related_pin	         : "CLK";
+			related_pg_pin : "VDD";
+			fall_power(Power_clock_rise_7_7) {
+				index_1 ("0.001000,0.0078125,0.015625,0.031250,0.062500,0.125000,0.250000");
+				index_2 ("0.000100,0.003125,0.006250,0.012500,0.025000,0.050000,0.100000");
+				values ("0.000454,0.000555,0.000563,0.000568,0.000572,0.000575,0.000577", \
+				        "0.000425,0.000527,0.000535,0.000540,0.000544,0.000547,0.000549", \
+				        "0.000408,0.000510,0.000518,0.000523,0.000527,0.000530,0.000533", \
+				        "0.000393,0.000496,0.000504,0.000509,0.000513,0.000517,0.000519", \
+				        "0.000389,0.000496,0.000504,0.000511,0.000515,0.000517,0.000520", \
+				        "0.000438,0.000530,0.000546,0.000556,0.000559,0.000564,0.000561", \
+				        "0.000537,0.000642,0.000646,0.000651,0.000657,0.000661,0.000667");
+			}
+			rise_power(Power_clock_rise_7_7) {
+				index_1 ("0.001000,0.0078125,0.015625,0.031250,0.062500,0.125000,0.250000");
+				index_2 ("0.000100,0.003125,0.006250,0.012500,0.025000,0.050000,0.100000");
+				values ("0.000669,0.000752,0.000763,0.000772,0.000804,0.000839,0.000912", \
+				        "0.000658,0.000742,0.000752,0.000762,0.000793,0.000828,0.000900", \
+				        "0.000656,0.000740,0.000747,0.000764,0.000784,0.000829,0.000909", \
+				        "0.000659,0.000744,0.000750,0.000766,0.000791,0.000807,0.000918", \
+				        "0.000674,0.000761,0.000770,0.000785,0.000794,0.000854,0.000919", \
+				        "0.000720,0.000800,0.000810,0.000819,0.000850,0.000870,0.000977", \
+				        "0.000831,0.000901,0.000903,0.000905,0.000930,0.000987,0.001040");
+			}
+		}
+	}
+
+  }
+
+
+  /******************************************************************************************
+   Module          	: TSPC_FF
+   Cell Description	: Pos. edge D-Flip-Flop with drive strength X1
+  *******************************************************************************************/
+
+  cell (TSPC_FF) {
+
+	ff ("IQ" , "IQN") {
+		next_state         	: "D";
+		clocked_on         	: "CLK";
+		power_down_function	: "(!VDD | VSS)";
+	}
+
+	drive_strength	: 1;
+
+	area               	: 0.364500;
+	pg_pin(VDD) {
+		voltage_name : VDD;
+		pg_type      : primary_power;
+	}
+	pg_pin(VSS) {
+		voltage_name : VSS;
+		pg_type      : primary_ground;
+	}
+
+	leakage_power () {
+		related_pg_pin : "VDD";
+		value          : 4741.501693;
+	}
+	leakage_power () {
+		related_pg_pin : "VSS";
+		value          : 0.000000;
+	}
+	leakage_power () {
+		related_pg_pin : "VDD";
+		when           : "!CLK & !D & !Q";
+		value          : 5342.059879;
+	}
+	leakage_power () {
+		related_pg_pin : "VSS";
+		when           : "!CLK & !D & !Q";
+		value          : 0.000000;
+	}
+	leakage_power () {
+		related_pg_pin : "VDD";
+		when           : "!CLK & !D & Q";
+		value          : 5342.059725;
+	}
+	leakage_power () {
+		related_pg_pin : "VSS";
+		when           : "!CLK & !D & Q";
+		value          : 0.000000;
+	}
+	leakage_power () {
+		related_pg_pin : "VDD";
+		when           : "!CLK & D & !Q";
+		value          : 5559.649103;
+	}
+	leakage_power () {
+		related_pg_pin : "VSS";
+		when           : "!CLK & D & !Q";
+		value          : 0.000000;
+	}
+	leakage_power () {
+		related_pg_pin : "VDD";
+		when           : "!CLK & D & Q";
+		value          : 5559.649057;
+	}
+	leakage_power () {
+		related_pg_pin : "VSS";
+		when           : "!CLK & D & Q";
+		value          : 0.000000;
+	}
+	leakage_power () {
+		related_pg_pin : "VDD";
+		when           : "CLK & !D & !Q";
+		value          : 2802.654639;
+	}
+	leakage_power () {
+		related_pg_pin : "VSS";
+		when           : "CLK & !D & !Q";
+		value          : 0.000000;
+	}
+	leakage_power () {
+		related_pg_pin : "VDD";
+		when           : "CLK & !D & Q";
+		value          : 2802.654639;
+	}
+	leakage_power () {
+		related_pg_pin : "VSS";
+		when           : "CLK & !D & Q";
+		value          : 0.000000;
+	}
+	leakage_power () {
+		related_pg_pin : "VDD";
+		when           : "CLK & D & !Q";
+		value          : 5261.643250;
+	}
+	leakage_power () {
+		related_pg_pin : "VSS";
+		when           : "CLK & D & !Q";
+		value          : 0.000000;
+	}
+	leakage_power () {
+		related_pg_pin : "VDD";
+		when           : "CLK & D & Q";
+		value          : 5261.643250;
+	}
+	leakage_power () {
+		related_pg_pin : "VSS";
+		when           : "CLK & D & Q";
+		value          : 0.000000;
+	}
+
+	pin (D) {
+		direction		: input;
+		input_signal_level		: VDD;
+		input_voltage		: default_VDD_VSS_input;
+		related_power_pin	: "VDD";
+		related_ground_pin	: "VSS";
+		capacitance		: 0.000381;
+		fall_capacitance	: 0.000380;
+		rise_capacitance	: 0.000381;
+
+		timing () {
+
+			related_pin        : "CLK";
+			timing_type        : hold_rising;
+			fall_constraint(Hold_fall_rise_4_4) {
+				index_1 ("0.001000,0.125000,0.250000,0.500000");
+				index_2 ("0.001000,0.062500,0.125000,0.250000");
+				values ("-0.006911,-0.018290,-0.020167,-0.011562", \
+				        "-0.018516,-0.025720,-0.026996,-0.016043", \
+				        "-0.025118,-0.031585,-0.033603,-0.025061", \
+				        "-0.038761,-0.044905,-0.048417,-0.045144");
+			}
+			rise_constraint(Hold_rise_rise_4_4) {
+				index_1 ("0.001000,0.125000,0.250000,0.500000");
+				index_2 ("0.001000,0.062500,0.125000,0.250000");
+				values ("0.007833,0.021854,0.028060,0.036898", \
+				        "0.003841,0.021644,0.026379,0.032771", \
+				        "0.006875,0.029972,0.033901,0.038704", \
+				        "0.016322,0.050093,0.053167,0.054337");
+			}
+		}
+
+		timing () {
+
+			related_pin        : "CLK";
+			timing_type        : setup_rising;
+			fall_constraint(Setup_fall_rise_4_4) {
+				index_1 ("0.001000,0.125000,0.250000,0.500000");
+				index_2 ("0.001000,0.062500,0.125000,0.250000");
+				values ("0.015478,0.028301,0.035727,0.041380", \
+				        "0.034542,0.041433,0.047853,0.052432", \
+				        "0.045095,0.049429,0.055647,0.060964", \
+				        "0.061251,0.064425,0.070422,0.077670");
+			}
+			rise_constraint(Setup_rise_rise_4_4) {
+				index_1 ("0.001000,0.125000,0.250000,0.500000");
+				index_2 ("0.001000,0.062500,0.125000,0.250000");
+				values ("-0.001421,-0.008286,-0.012070,-0.018694", \
+				        "0.008165,-0.000610,-0.005602,-0.013576", \
+				        "0.012086,-0.000417,-0.007145,-0.016960", \
+				        "0.015914,-0.002317,-0.012963,-0.026828");
+			}
+		}
+
+		internal_power () {
+
+			related_pg_pin : "VDD";
+			when          	: "!CLK & !Q";
+
+			fall_power(Hidden_power_data_fall_7) {
+				index_1 ("0.001000,0.015625,0.031250,0.062500,0.125000,0.250000,0.500000");
+				values ("0.000275,0.000260,0.000258,0.000262,0.000281,0.000336,0.000458");
+			}
+			rise_power(Hidden_power_data_rise_7) {
+				index_1 ("0.001000,0.015625,0.031250,0.062500,0.125000,0.250000,0.500000");
+				values ("0.000012,-0.000002,-0.000002,0.000004,0.000028,0.000084,0.000208");
+			}
+
+		}
+
+		internal_power () {
+
+			related_pg_pin : "VDD";
+			when          	: "!CLK & Q";
+
+			fall_power(Hidden_power_data_fall_7) {
+				index_1 ("0.001000,0.015625,0.031250,0.062500,0.125000,0.250000,0.500000");
+				values ("0.000268,0.000254,0.000252,0.000255,0.000275,0.000330,0.000452");
+			}
+			rise_power(Hidden_power_data_rise_7) {
+				index_1 ("0.001000,0.015625,0.031250,0.062500,0.125000,0.250000,0.500000");
+				values ("0.000013,-0.000001,-0.000001,0.000005,0.000029,0.000086,0.000210");
+			}
+
+		}
+
+		internal_power () {
+
+			related_pg_pin : "VDD";
+			when          	: "CLK & !Q";
+
+			fall_power(Hidden_power_data_fall_7) {
+				index_1 ("0.001000,0.015625,0.031250,0.062500,0.125000,0.250000,0.500000");
+				values ("0.000059,0.000059,0.000058,0.000059,0.000060,0.000061,0.000061");
+			}
+			rise_power(Hidden_power_data_rise_7) {
+				index_1 ("0.001000,0.015625,0.031250,0.062500,0.125000,0.250000,0.500000");
+				values ("-0.000024,-0.000024,-0.000024,-0.000024,-0.000024,-0.000024,-0.000025");
+			}
+
+		}
+
+		internal_power () {
+
+			related_pg_pin : "VDD";
+			when          	: "CLK & Q";
+
+			fall_power(Hidden_power_data_fall_7) {
+				index_1 ("0.001000,0.015625,0.031250,0.062500,0.125000,0.250000,0.500000");
+				values ("0.000088,0.000080,0.000078,0.000077,0.000078,0.000078,0.000080");
+			}
+			rise_power(Hidden_power_data_rise_7) {
+				index_1 ("0.001000,0.015625,0.031250,0.062500,0.125000,0.250000,0.500000");
+				values ("-0.000036,-0.000043,-0.000044,-0.000044,-0.000044,-0.000043,-0.000041");
+			}
+
+		}
+	}
+
+	pin (CLK) {
+		direction		: input;
+		input_signal_level		: VDD;
+		input_voltage		: default_VDD_VSS_input;
+		related_power_pin	: "VDD";
+		related_ground_pin	: "VSS";
+		clock   		: true;
+		capacitance		: 0.000726;
+		fall_capacitance	: 0.000723;
+		rise_capacitance	: 0.000729;
+
+		timing () {
+
+			related_pin        : "CLK";
+			timing_type        : min_pulse_width;
+			fall_constraint(Pulse_width_clock_rise_4) {
+				index_1 ("0.001000,0.062500,0.125000,0.250000");
+				values ("0.014438,0.031941,0.063000,0.125500");
+			}
+			rise_constraint(Pulse_width_clock_rise_4) {
+				index_1 ("0.001000,0.062500,0.125000,0.250000");
+				values ("0.019581,0.035200,0.063000,0.125500");
+			}
+		}
+
+		internal_power () {
+
+			related_pg_pin : "VDD";
+			when          	: "!D & !Q";
+
+			fall_power(Hidden_power_clock_fall_7) {
+				index_1 ("0.001000,0.0078125,0.015625,0.031250,0.062500,0.125000,0.250000");
+				values ("0.000433,0.000425,0.000422,0.000422,0.000428,0.000453,0.000517");
+			}
+			rise_power(Hidden_power_clock_rise_7) {
+				index_1 ("0.001000,0.0078125,0.015625,0.031250,0.062500,0.125000,0.250000");
+				values ("0.000173,0.000148,0.000126,0.000101,0.000101,0.000141,0.000275");
+			}
+
+		}
+
+		internal_power () {
+
+			related_pg_pin : "VDD";
+			when          	: "!D & Q";
+
+			fall_power(Hidden_power_clock_fall_7) {
+				index_1 ("0.001000,0.0078125,0.015625,0.031250,0.062500,0.125000,0.250000");
+				values ("0.000321,0.000316,0.000314,0.000313,0.000316,0.000322,0.000351");
+			}
+			rise_power(scalar) {values ("0.0");
+			}
+
+		}
+
+		internal_power () {
+
+			related_pg_pin : "VDD";
+			when          	: "D & !Q";
+
+			fall_power(Hidden_power_clock_fall_7) {
+				index_1 ("0.001000,0.0078125,0.015625,0.031250,0.062500,0.125000,0.250000");
+				values ("0.000358,0.000355,0.000354,0.000352,0.000351,0.000352,0.000377");
+			}
+			rise_power(scalar) {values ("0.0");
+			}
+
+		}
+
+		internal_power () {
+
+			related_pg_pin : "VDD";
+			when          	: "D & Q";
+
+			fall_power(Hidden_power_clock_fall_7) {
+				index_1 ("0.001000,0.0078125,0.015625,0.031250,0.062500,0.125000,0.250000");
+				values ("0.000084,0.000081,0.000081,0.000081,0.000080,0.000080,0.000081");
+			}
+			rise_power(Hidden_power_clock_rise_7) {
+				index_1 ("0.001000,0.0078125,0.015625,0.031250,0.062500,0.125000,0.250000");
+				values ("-0.000013,-0.000013,-0.000013,-0.000013,-0.000013,-0.000013,-0.000013");
+			}
+
+		}
+	}
+
+	pin (Q) {
+		direction		: output;
+		output_voltage		: default_VDD_VSS_output;
+		related_power_pin	: "VDD";
+		related_ground_pin	: "VSS";
+		max_capacitance		: 0.025546;
+		function		: "IQ";
+		power_down_function	: "(!VDD | VSS)";
+
+		timing () {
+
+			related_pin        : "CLK";
+			timing_type        : rising_edge;
+			timing_sense       : non_unate;
+
+			cell_fall(Timing_clock_rise_7_7) {
+				index_1 ("0.001000,0.0078125,0.015625,0.031250,0.062500,0.125000,0.250000");
+				index_2 ("0.000100,0.003125,0.006250,0.012500,0.025000,0.050000,0.100000");
+				values ("0.026127,0.042758,0.058044,0.088481,0.148868,0.270313,0.512134", \
+				        "0.028644,0.045282,0.060527,0.090927,0.151672,0.272290,0.515161", \
+				        "0.030919,0.047558,0.062839,0.093274,0.153722,0.275014,0.517372", \
+				        "0.034526,0.051164,0.066455,0.096880,0.157305,0.278741,0.520449", \
+				        "0.039632,0.056353,0.071610,0.101950,0.162614,0.283892,0.525274", \
+				        "0.046949,0.063598,0.078729,0.109065,0.169737,0.290813,0.532292", \
+				        "0.058021,0.074866,0.090084,0.120382,0.180591,0.301459,0.543692");
+			}
+			cell_rise(Timing_clock_rise_7_7) {
+				index_1 ("0.001000,0.0078125,0.015625,0.031250,0.062500,0.125000,0.250000");
+				index_2 ("0.000100,0.003125,0.006250,0.012500,0.025000,0.050000,0.100000");
+				values ("0.014195,0.035650,0.055831,0.096225,0.176932,0.336876,0.660443", \
+				        "0.017257,0.038877,0.059090,0.099498,0.179842,0.340720,0.664122", \
+				        "0.019734,0.041365,0.061599,0.102007,0.182217,0.343421,0.666688", \
+				        "0.024189,0.045836,0.066091,0.106521,0.187303,0.347105,0.670754", \
+				        "0.030232,0.052444,0.072609,0.113034,0.193198,0.354658,0.675668", \
+				        "0.036735,0.059675,0.080124,0.120338,0.200538,0.361341,0.682035", \
+				        "0.040027,0.064755,0.084969,0.125487,0.205314,0.366595,0.688832");
+			}
+			fall_transition(Timing_clock_rise_7_7) {
+				index_1 ("0.001000,0.0078125,0.015625,0.031250,0.062500,0.125000,0.250000");
+				index_2 ("0.000100,0.003125,0.006250,0.012500,0.025000,0.050000,0.100000");
+				values ("0.005592,0.030560,0.057612,0.111127,0.220960,0.436362,0.872038", \
+				        "0.005610,0.030494,0.057373,0.112070,0.218974,0.438557,0.869787", \
+				        "0.005607,0.030572,0.057609,0.111479,0.220666,0.437665,0.869348", \
+				        "0.005654,0.030537,0.057571,0.111204,0.220947,0.436033,0.872363", \
+				        "0.005594,0.030507,0.057220,0.111849,0.220639,0.435252,0.873910", \
+				        "0.005787,0.030457,0.056931,0.111508,0.219243,0.435428,0.872393", \
+				        "0.006129,0.030620,0.057033,0.110674,0.218666,0.434636,0.866915");
+			}
+			rise_transition(Timing_clock_rise_7_7) {
+				index_1 ("0.001000,0.0078125,0.015625,0.031250,0.062500,0.125000,0.250000");
+				index_2 ("0.000100,0.003125,0.006250,0.012500,0.025000,0.050000,0.100000");
+				values ("0.007043,0.042885,0.080907,0.157387,0.310137,0.622437,1.232835", \
+				        "0.007087,0.042903,0.081146,0.156936,0.312208,0.622225,1.228164", \
+				        "0.007103,0.042869,0.081300,0.156700,0.312639,0.621710,1.226814", \
+				        "0.007313,0.042931,0.080941,0.157423,0.309834,0.622516,1.233809", \
+				        "0.008546,0.042834,0.080875,0.158180,0.313098,0.617908,1.235835", \
+				        "0.010956,0.044030,0.081229,0.157942,0.313269,0.621221,1.239434", \
+				        "0.015278,0.045104,0.082475,0.157479,0.308684,0.619133,1.229348");
+			}
+		}
+
+		internal_power () {
+
+			related_pin	         : "CLK";
+			related_pg_pin : "VDD";
+			fall_power(Power_clock_rise_7_7) {
+				index_1 ("0.001000,0.0078125,0.015625,0.031250,0.062500,0.125000,0.250000");
+				index_2 ("0.000100,0.003125,0.006250,0.012500,0.025000,0.050000,0.100000");
+				values ("0.000279,0.000337,0.000342,0.000346,0.000349,0.000351,0.000352", \
+				        "0.000253,0.000310,0.000316,0.000320,0.000323,0.000325,0.000326", \
+				        "0.000238,0.000295,0.000301,0.000305,0.000308,0.000310,0.000311", \
+				        "0.000222,0.000278,0.000284,0.000288,0.000290,0.000293,0.000294", \
+				        "0.000212,0.000275,0.000280,0.000284,0.000286,0.000289,0.000290", \
+				        "0.000243,0.000290,0.000296,0.000300,0.000302,0.000302,0.000305", \
+				        "0.000300,0.000360,0.000358,0.000357,0.000361,0.000362,0.000364");
+			}
+			rise_power(Power_clock_rise_7_7) {
+				index_1 ("0.001000,0.0078125,0.015625,0.031250,0.062500,0.125000,0.250000");
+				index_2 ("0.000100,0.003125,0.006250,0.012500,0.025000,0.050000,0.100000");
+				values ("0.000120,0.000150,0.000158,0.000169,0.000201,0.000224,0.000315", \
+				        "0.000111,0.000147,0.000156,0.000168,0.000201,0.000222,0.000322", \
+				        "0.000106,0.000141,0.000151,0.000165,0.000195,0.000216,0.000323", \
+				        "0.000100,0.000134,0.000144,0.000157,0.000189,0.000217,0.000307", \
+				        "0.000096,0.000125,0.000136,0.000148,0.000166,0.000240,0.000347", \
+				        "0.000099,0.000122,0.000128,0.000139,0.000173,0.000228,0.000281", \
+				        "0.000108,0.000131,0.000135,0.000143,0.000157,0.000202,0.000332");
+			}
+		}
+	}
+
+  }
+
+}
+/*
+* End of file
+*/
