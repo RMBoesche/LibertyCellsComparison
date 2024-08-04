@@ -19,6 +19,10 @@ lut_to_indices = {
     'cell_rise': ('input_transition_time', 'load_capacitance'),
     'fall_transition': ('input_transition_time', 'load_capacitance'),
     'rise_transition': ('input_transition_time', 'load_capacitance'),
+    'hold_rising_fall': ('clock_transition_time', 'data_transition_time'),
+    'hold_rising_rise': ('clock_transition_time', 'data_transition_time'),
+    'setup_rising_fall': ('clock_transition_time', 'data_transition_time'),
+    'setup_rising_rise': ('clock_transition_time', 'data_transition_time')
 }
 
 def read_all_liberty_files(directory):
@@ -77,6 +81,10 @@ def parse_specific_luts(liberty_file_path):
             'cell_rise': re.compile(r'cell_rise\s*\((?!Hidden_power).*?\)\s*\{(.*?)\}', re.DOTALL),
             'fall_transition': re.compile(r'fall_transition\s*\((?!Hidden_power).*?\)\s*\{(.*?)\}', re.DOTALL),
             'rise_transition': re.compile(r'rise_transition\s*\((?!Hidden_power).*?\)\s*\{(.*?)\}', re.DOTALL),
+            'hold_rising_fall': re.compile(r'fall_constraint\s*\(Hold_fall_rise_4_4\)\s*\{(.*?)\}', re.DOTALL),
+            'hold_rising_rise': re.compile(r'rise_constraint\s*\(Hold_rise_rise_4_4\)\s*\{(.*?)\}', re.DOTALL),
+            'setup_rising_fall': re.compile(r'fall_constraint\s*\(Setup_fall_rise_4_4\)\s*\{(.*?)\}', re.DOTALL),
+            'setup_rising_rise': re.compile(r'rise_constraint\s*\(Setup_rise_rise_4_4\)\s*\{(.*?)\}', re.DOTALL)
         }
 
         lut_data = {}
@@ -139,7 +147,11 @@ def plot_averages_for_vts(average_data):
         'cell_fall': 'ps',
         'cell_rise': 'ps',
         'fall_transition': 'ps',
-        'rise_transition': 'ps'
+        'rise_transition': 'ps',
+        'hold_rising_fall': 'ps',
+        'hold_rising_rise': 'ps',
+        'setup_rising_fall': 'ps',
+        'setup_rising_rise': 'ps'
     }
 
     for key in lut_to_indices.keys():
@@ -173,7 +185,7 @@ def plot_averages_for_vts(average_data):
         plt.legend()
         plt.grid(True)
         plt.xticks(rotation=45)
-        plt.savefig(f'{key}_VT_Corner_averages.png')
+        plt.savefig(f'./VT_Corner_averages_graphs/{key}_VT_Corner_averages.png')
         plt.close()
 
 

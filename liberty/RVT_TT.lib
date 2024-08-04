@@ -26,8 +26,8 @@
 * 
 * 
 * Running on cafipdev for user Rodrigo Boesche (rodrigb).
-* Local time is now Fri, 2 Aug 2024, 15:46:08.
-* Main process id is 19920.
+* Local time is now Sat, 3 Aug 2024, 00:55:22.
+* Main process id is 5211.
 *
 * Spice engine            : SmartSpice 5.5.2.C
 * Liberty export type     : conditional
@@ -42,7 +42,7 @@
 library (asap7sc7p5t_RVT_TypTyp_0p70_25) {
 
   /* Documentation Attributes */
-  date                    		: "Fri, 2 Aug 2024, 15:46:08";
+  date                    		: "Sat, 3 Aug 2024, 00:55:22";
   revision                		: "revision 1.0";
   comment                 		: "Copyright (C) 1984-2024 Silvaco, Inc. All rights reserved.";
 
