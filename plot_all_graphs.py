@@ -3,23 +3,18 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 
-cells_names = ['PowerPC_FF',
-               'mC2MOS_FF',
-               'mC2MOS_ASAP7_FF',
-               'C2MOS_FF',
-               'TG_FF',
-               'TSPC_FF',
-               'TSPC_M1_FF',
-               # 'C2MOS_DYN_FF',
-               # 'C2MOS_DYN_M1_FF',
-               'TG_DYN_FF',
-               ]
+cells_names = ['PowerPC',
+               'mC2MOS',
+               'mC2MOS_ASAP7',
+               'C2MOS',
+               'TGFF',
+               'TSPC',
+               'TSPC_M1',
+               'TGFF_DYN',]
 
-dyn_cells = [ 'TSPC_FF',
-              'TSPC_M1_FF',
-              # 'C2MOS_DYN_FF',
-              # 'C2MOS_DYN_M1_FF',
-              'TG_DYN_FF',]
+dyn_cells = ['TSPC',
+             'TSPC_M1',
+             'TGFF_DYN',]
 
 # Predefined indices
 indices = {
@@ -43,15 +38,14 @@ lut_to_indices = {
     'setup_rising_rise': ('clock_transition_time', 'data_transition_time')
 }
 
-markers = {'mC2MOS_FF': 'o',
-           'mC2MOS_ASAP7_FF': 'h',
-           'TSPC_FF': 's',
-           'TSPC_M1_FF': 'd',
-           'PowerPC_FF': '^',
-           'C2MOS_FF': '*',
-           # 'C2MOS_DYN_FF': 'p',
-           # 'C2MOS_DYN_M1_FF': '+',
-           'TG_FF': 'x',
+markers = {'mC2MOS': 'o',
+           'mC2MOS_ASAP7': 'h',
+           'PowerPC': '^',
+           'C2MOS': '*',
+           'TGFF': 'x',
+           'TSPC': 's',
+           'TSPC_M1': 'd',
+           'TGFF_DYN': 'p',
            }
 
 def read_all_liberty_files(directory):
@@ -103,7 +97,7 @@ def parse_specific_luts(liberty_file_path):
         cell_content = extract_cell_content(liberty_content, cell_name)
         
         if not cell_content:
-            print(f"Cell content not found for {cell_name}.")
+            # print(f"Cell content not found for {cell_name}.")
             continue
 
         lut_patterns = {
@@ -144,43 +138,6 @@ def parse_specific_luts(liberty_file_path):
 
     return all_cells_data
 
-def calculate_lut_averages(all_lut_info):
-    vt_luts = {cell: {key: {'RVT': {'FF': [], 'TT': [], 'SS': []}, 'LVT': {'FF': [], 'TT': [], 'SS': []}, 'SLVT': {'FF': [], 'TT': [], 'SS': []}} for key in list(lut_to_indices.keys()) + ['leakage_power']} for cell in cells_names}
-
-    for file_name, cells in all_lut_info.items():
-        vt = file_name.split('_')[0]
-        corner = file_name.split('_')[-1].replace('.lib', '')
-        for cell, luts in cells.items():
-            for key, lut_list in luts.items():
-                if key == 'leakage_power' and cell == 'TSPC_FF':
-                    continue
-                if key == 'leakage_power':
-                    if lut_list:
-                        average_value = np.mean(lut_list)
-                        if not np.isnan(average_value):
-                            vt_luts[cell][key][vt][corner].append(average_value)
-                else:
-                    for lut in lut_list:
-                        lut_values = np.array(lut['values'], dtype=float)
-                        average_value = np.mean(lut_values)
-                        if not np.isnan(average_value):
-                            vt_luts[cell][key][vt][corner].append(average_value)
-
-    final_averages = {}
-    for cell, metrics in vt_luts.items():
-        final_averages[cell] = {}
-        for key, vts in metrics.items():
-            final_averages[cell][key] = {}
-            for vt, corners in vts.items():
-                final_averages[cell][key][vt] = {}
-                for corner, values in corners.items():
-                    if values:
-                        final_averages[cell][key][vt][corner] = np.mean(values)
-                    else:
-                        final_averages[cell][key][vt][corner] = float('nan')
-
-    return final_averages
-
 def calculate_lut_worst_values(all_lut_info):
     vt_luts = {cell: {key: {'RVT': {'FF': [], 'TT': [], 'SS': []}, 'LVT': {'FF': [], 'TT': [], 'SS': []}, 'SLVT': {'FF': [], 'TT': [], 'SS': []}} for key in list(lut_to_indices.keys()) + ['leakage_power']} for cell in cells_names}
 
@@ -218,63 +175,43 @@ def calculate_lut_worst_values(all_lut_info):
 
     return final_worst_values
 
-def plot_averages_for_vts(average_data):
-    x_labels = ['RVT_FF', 'RVT_TT', 'RVT_SS', 'LVT_FF', 'LVT_TT', 'LVT_SS', 'SLVT_FF', 'SLVT_TT', 'SLVT_SS']
-    vt_labels = ['RVT', 'LVT', 'SLVT']
+def calculate_additional_metrics(worst_data):
+    additional_metrics = [
+        'propagation_delay',
+        'output_transition',
+        'hold_time',
+        'setup_time',
+        'full_cycle_power',
+        'power_delay_product',
+        'energy_delay_product'
+    ]
 
-    # Dicionário para mapear métricas às suas unidades
-    metric_units = {
-        'fall_power': 'uW/GHz',
-        'rise_power': 'uW/GHz',
-        'cell_fall': 'ps',
-        'cell_rise': 'ps',
-        'fall_transition': 'ps',
-        'rise_transition': 'ps',
-        'hold_rising_fall': 'ps',
-        'hold_rising_rise': 'ps',
-        'setup_rising_fall': 'ps',
-        'setup_rising_rise': 'ps',
-        'leakage_power': 'nW'
-    }
+    # Inicializa as novas métricas para evitar KeyError
+    for cell_name, metrics in worst_data.items():
+        for metric in additional_metrics:
+            if metric not in metrics:
+                metrics[metric] = {vt: {corner: float('nan') for corner in ['FF', 'TT', 'SS']} for vt in ['RVT', 'LVT', 'SLVT']}
 
-    for key in list(lut_to_indices.keys()) + ['leakage_power']:
-        plt.figure(figsize=(12, 8))
-
-        for cell_name, luts in average_data.items():
-            y_values = []
-            for vt in vt_labels:
-                for corner in ['FF', 'TT', 'SS']:
-                    if key in luts and vt in luts[key] and corner in luts[key][vt]:
-                        y_values.append(luts[key][vt][corner])
-                    # else:
-                    #     y_values.append(float('nan'))
-            
-            # Insert np.nan to break the line between different VTs
-            y_values_with_nan = []
-            x_labels_with_nan = []
-            for i, y in enumerate(y_values):
-                if i % 3 == 0 and i != 0:  # Add np.nan before starting a new VT section
-                    y_values_with_nan.append(np.nan)
-                    x_labels_with_nan.append('RVT_FF') # Para nao criar espacos em branco
-                y_values_with_nan.append(y)
-                x_labels_with_nan.append(x_labels[i])
-
-            marker = markers.get(cell_name, 'o')  # Default to circle if marker not found
-            plt.plot(x_labels_with_nan, y_values_with_nan, marker=marker, label=cell_name)
-
-        plt.xlabel('VT_Corner')
-        plt.ylabel(f'{key.replace("_", " ").title()} ({metric_units.get(key, "")})')
-        plt.title(f'{key.replace("_", " ").title()} Averages for VTs and Corners')
-        plt.legend()
-        plt.grid(True)
-        plt.xticks(rotation=45)
-        plt.savefig(f'./VT_Corner_averages_graphs/{key}_VT_Corner_averages.png')
-        plt.close()
+    for cell_name, metrics in worst_data.items():
+        for vt in ['RVT', 'LVT', 'SLVT']:
+            for corner in ['FF', 'TT', 'SS']:
+                try:
+                    # Calculate additional metrics
+                    metrics['propagation_delay'][vt][corner] = (metrics['cell_rise'][vt][corner] + metrics['cell_fall'][vt][corner]) / 2
+                    metrics['output_transition'][vt][corner] = (metrics['rise_transition'][vt][corner] + metrics['fall_transition'][vt][corner]) / 2
+                    metrics['hold_time'][vt][corner] = max(metrics['hold_rising_rise'][vt][corner], metrics['hold_rising_fall'][vt][corner])
+                    metrics['setup_time'][vt][corner] = max(metrics['setup_rising_rise'][vt][corner], metrics['setup_rising_fall'][vt][corner])
+                    metrics['full_cycle_power'][vt][corner] = metrics['fall_power'][vt][corner] + metrics['rise_power'][vt][corner]
+                    metrics['power_delay_product'][vt][corner] = ((metrics['fall_power'][vt][corner] + metrics['rise_power'][vt][corner]) / 2) * ((metrics['cell_rise'][vt][corner] + metrics['cell_fall'][vt][corner]) / 2)
+                    metrics['energy_delay_product'][vt][corner] = ((metrics['fall_power'][vt][corner] + metrics['rise_power'][vt][corner]) / 2) * ((metrics['cell_rise'][vt][corner] + metrics['cell_fall'][vt][corner]) / 2) ** 2
+                except KeyError as e:
+                    print(f"KeyError for {cell_name} at {vt}_{corner}: {e}")
+                    continue
+    return worst_data
 
 def plot_worst_values_for_vts(worst_data):
     x_labels = ['RVT_FF', 'RVT_TT', 'RVT_SS', 'LVT_FF', 'LVT_TT', 'LVT_SS', 'SLVT_FF', 'SLVT_TT', 'SLVT_SS']
     vt_labels = ['RVT', 'LVT', 'SLVT']
-    markers = {'C2MOS_FF': 'o', 'TSPC_FF': 's', 'TG_FF': '^'}  # 'o' for circle, 's' for square, '^' for triangle
 
     # Dicionário para mapear métricas às suas unidades
     metric_units = {
@@ -308,6 +245,10 @@ def plot_worst_values_for_vts(worst_data):
         'energy_delay_product'
     ]
 
+    additional_metrics_dir = './additional_metrics_graphs/'
+    if not os.path.exists(additional_metrics_dir):
+        os.makedirs(additional_metrics_dir)
+
     for key in list(lut_to_indices.keys()) + ['leakage_power'] + additional_metrics:
         plt.figure(figsize=(12, 8))
 
@@ -335,40 +276,25 @@ def plot_worst_values_for_vts(worst_data):
 
         plt.xlabel('VT_Corner')
         plt.ylabel(f'{key.replace("_", " ").title()} ({metric_units.get(key, "")})')
-        plt.title(f'{key.replace("_", " ").title()} Worst Values for VTs and Corners')
+        plt.title(f'{key.replace("_", " ").title()} for VTs and Corners')
         plt.legend()
         plt.grid(True)
         plt.xticks(rotation=45)
-        plt.savefig(f'./VT_Corner_worst_graphs/{key}_VT_Corner_worst.png')
+        
+        if key in additional_metrics or key == 'leakage_power':
+            plt.savefig(f'{additional_metrics_dir}/{key}_VT_Corner_worst.png')
+        else:
+            plt.savefig(f'./VT_Corner_graphs/{key}_VT_Corner_worst.png')
+
         plt.close()
-
-def calculate_additional_metrics(worst_data):
-    for cell_name, metrics in worst_data.items():
-        for vt in ['RVT', 'LVT', 'SLVT']:
-            for corner in ['FF', 'TT', 'SS']:
-                try:
-                    # Calculate additional metrics
-                    metrics['propagation_delay'][vt][corner] = (metrics['cell_rise'][vt][corner] + metrics['cell_fall'][vt][corner]) / 2
-                    metrics['output_transition'][vt][corner] = (metrics['rise_transition'][vt][corner] + metrics['fall_transition'][vt][corner]) / 2
-                    metrics['hold_time'][vt][corner] = max(metrics['hold_rising_rise'][vt][corner], metrics['hold_rising_fall'][vt][corner])
-                    metrics['setup_time'][vt][corner] = max(metrics['setup_rising_rise'][vt][corner], metrics['setup_rising_fall'][vt][corner])
-                    metrics['full_cycle_power'][vt][corner] = metrics['fall_power'][vt][corner] + metrics['rise_power'][vt][corner]
-                    metrics['power_delay_product'][vt][corner] = ((metrics['fall_power'][vt][corner] + metrics['rise_power'][vt][corner]) / 2) * ((metrics['cell_rise'][vt][corner] + metrics['cell_fall'][vt][corner]) / 2)
-                    metrics['energy_delay_product'][vt][corner] = ((metrics['fall_power'][vt][corner] + metrics['rise_power'][vt][corner]) / 2) * ((metrics['cell_rise'][vt][corner] + metrics['cell_fall'][vt][corner]) / 2) ** 2
-                except KeyError:
-                    continue
-    return worst_data
-
 
 liberty_directory = './liberty/'
 
 all_lut_info = read_all_liberty_files(liberty_directory)
 
-average_data = calculate_lut_averages(all_lut_info)
 worst_data = calculate_lut_worst_values(all_lut_info)
 
 worst_data = calculate_additional_metrics(worst_data)
 
-plot_averages_for_vts(average_data)
 plot_worst_values_for_vts(worst_data)
 

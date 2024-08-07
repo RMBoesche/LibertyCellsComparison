@@ -17,6 +17,10 @@ lut_to_indices = {
     'cell_rise': ('input_transition_time', 'load_capacitance'),
     'fall_transition': ('input_transition_time', 'load_capacitance'),
     'rise_transition': ('input_transition_time', 'load_capacitance'),
+    'hold_rising_fall': ('clock_transition_time', 'data_transition_time'),
+    'hold_rising_rise': ('clock_transition_time', 'data_transition_time'),
+    'setup_rising_fall': ('clock_transition_time', 'data_transition_time'),
+    'setup_rising_rise': ('clock_transition_time', 'data_transition_time')
 }
 
 def parse_specific_luts(liberty_file_path):
@@ -52,8 +56,19 @@ def parse_specific_luts(liberty_file_path):
             return values
         return None
 
+
+    cells =   ['C2MOS_FF',
+               'C2MOS_DYN_FF',
+               'C2MOS_DYN_M1_FF',
+               'PowerPC_FF',
+               'TG_FF',
+               'TG_DYN_FF',
+               'mC2MOS_FF',
+               'mC2MOS_ASAP7_FF',
+               'TSPC_FF',
+               'TSPC_M1_FF']
+
     # Extracting content for multiple cells
-    cells = ['C2MOS_FF', 'TSPC_FF', 'TG_FF']
     all_cells_data = {}
 
     for cell_name in cells:
@@ -73,6 +88,10 @@ def parse_specific_luts(liberty_file_path):
             'cell_rise': re.compile(r'cell_rise\s*\((?!Hidden_power).*?\)\s*\{(.*?)\}', re.DOTALL),
             'fall_transition': re.compile(r'fall_transition\s*\((?!Hidden_power).*?\)\s*\{(.*?)\}', re.DOTALL),
             'rise_transition': re.compile(r'rise_transition\s*\((?!Hidden_power).*?\)\s*\{(.*?)\}', re.DOTALL),
+            'hold_rising_fall': re.compile(r'fall_constraint\s*\(Hold_fall_rise_4_4\)\s*\{(.*?)\}', re.DOTALL),
+            'hold_rising_rise': re.compile(r'rise_constraint\s*\(Hold_rise_rise_4_4\)\s*\{(.*?)\}', re.DOTALL),
+            'setup_rising_fall': re.compile(r'fall_constraint\s*\(Setup_fall_rise_4_4\)\s*\{(.*?)\}', re.DOTALL),
+            'setup_rising_rise': re.compile(r'rise_constraint\s*\(Setup_rise_rise_4_4\)\s*\{(.*?)\}', re.DOTALL)
         }
 
         lut_data = {}
@@ -100,8 +119,8 @@ def parse_specific_luts(liberty_file_path):
 
 def plot_individual_luts(cell_name, lut_info):
     for key, luts in lut_info.items():
-        if key not in ['rise_power', 'fall_power', 'cell_fall', 'cell_rise', 'fall_transition', 'rise_transition']:
-            continue
+        # if key not in ['rise_power', 'fall_power', 'cell_fall', 'cell_rise', 'fall_transition', 'rise_transition', ]:
+        #     continue
         
         index_1_label, index_2_label = lut_to_indices[key]
         index_1_name = index_1_label.replace('_', ' ').title()
@@ -127,7 +146,7 @@ def plot_individual_luts(cell_name, lut_info):
         plt.title(f'{cell_name} - {key.replace("_", " ").title()} vs {index_1_name}')
         plt.legend(title=index_2_name)
         plt.grid(True)
-        plt.savefig(f'./graphs/{cell_name}_{key}_{index_1_label}.png')  # Save the plot as a PNG file
+        plt.savefig(f'./individual_graphs/{cell_name}_{key}_{index_1_label}.png')  # Save the plot as a PNG file
         plt.close()
 
         # Plotting index_2 vs values
@@ -150,11 +169,11 @@ def plot_individual_luts(cell_name, lut_info):
         plt.title(f'{cell_name} - {key.replace("_", " ").title()} vs {index_2_name}')
         plt.legend(title=index_1_name)
         plt.grid(True)
-        plt.savefig(f'./graphs/{cell_name}_{key}_{index_2_label}.png')  # Save the plot as a PNG file
+        plt.savefig(f'./individual_graphs/{cell_name}_{key}_{index_2_label}.png')  # Save the plot as a PNG file
         plt.close()
 
 # Path to the Liberty file
-liberty_file_path = './liberty/asap7sc7p5t_RVT_TypTyp_0p70_25_conditional_nldm.lib'
+liberty_file_path = './liberty/RVT_TT.lib'
 
 # Extracting LUT information for multiple cells
 all_lut_info = parse_specific_luts(liberty_file_path)
