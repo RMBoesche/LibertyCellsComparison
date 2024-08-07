@@ -10,7 +10,8 @@ cells_names = ['PowerPC',
                'TGFF',
                'TSPC',
                'TSPC_M1',
-               'TGFF_DYN',]
+               'TGFF_DYN',
+               ]
 
 dyn_cells = ['TSPC',
              'TSPC_M1',
@@ -288,6 +289,78 @@ def plot_worst_values_for_vts(worst_data):
 
         plt.close()
 
+def plot_worst_values_for_vts_subplots(worst_data):
+    x_labels = ['FF', 'TT', 'SS']
+    vt_labels = ['RVT', 'LVT', 'SLVT']
+
+    # Dicionário para mapear métricas às suas unidades
+    metric_units = {
+        'fall_power': 'uW/GHz',
+        'rise_power': 'uW/GHz',
+        'cell_fall': 'ps',
+        'cell_rise': 'ps',
+        'fall_transition': 'ps',
+        'rise_transition': 'ps',
+        'hold_rising_fall': 'ps',
+        'hold_rising_rise': 'ps',
+        'setup_rising_fall': 'ps',
+        'setup_rising_rise': 'ps',
+        'leakage_power': 'nW',
+        'propagation_delay': 'ps',
+        'output_transition': 'ps',
+        'hold_time': 'ps',
+        'setup_time': 'ps',
+        'full_cycle_power': 'uW/GHz',
+        'power_delay_product': 'uW*ps/GHz',
+        'energy_delay_product': 'uW*ps²/GHz'
+    }
+
+    additional_metrics = [
+        'propagation_delay',
+        'output_transition',
+        'hold_time',
+        'setup_time',
+        'full_cycle_power',
+        'power_delay_product',
+        'energy_delay_product'
+    ]
+
+    additional_metrics_dir = './additional_metrics_graphs/'
+    if not os.path.exists(additional_metrics_dir):
+        os.makedirs(additional_metrics_dir)
+
+    for key in list(lut_to_indices.keys()) + ['leakage_power'] + additional_metrics:
+        fig, axes = plt.subplots(1, 3, figsize=(18, 6), sharey=False)
+        fig.suptitle(f'{key.replace("_", " ").title()} for VTs and Corners')
+
+        for idx, vt in enumerate(vt_labels):
+            ax = axes[idx]
+            for cell_name, luts in worst_data.items():
+                y_values = []
+                for corner in x_labels:
+                    if key in luts and vt in luts[key] and corner in luts[key][vt]:
+                        y_values.append(luts[key][vt][corner])
+                    else:
+                        y_values.append(float('nan'))
+                
+                marker = markers.get(cell_name, 'o')  # Default to circle if marker not found
+                ax.plot(x_labels, y_values, marker=marker, label=cell_name)
+
+            ax.set_title(vt)
+            ax.set_xlabel('Corner')
+            ax.set_ylabel(f'{key.replace("_", " ").title()} ({metric_units.get(key, "")})')
+            ax.grid(True)
+            if idx == 0:
+                ax.legend()
+
+        plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+        if key in additional_metrics or key == 'leakage_power':
+            plt.savefig(f'{additional_metrics_dir}/{key}_VT_Corner_worst.png')
+        else:
+            plt.savefig(f'./VT_Corner_graphs/{key}_VT_Corner_worst.png')
+        plt.close()
+
+
 liberty_directory = './liberty/'
 
 all_lut_info = read_all_liberty_files(liberty_directory)
@@ -296,5 +369,5 @@ worst_data = calculate_lut_worst_values(all_lut_info)
 
 worst_data = calculate_additional_metrics(worst_data)
 
-plot_worst_values_for_vts(worst_data)
+plot_worst_values_for_vts_subplots(worst_data)
 
