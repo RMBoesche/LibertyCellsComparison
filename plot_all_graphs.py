@@ -184,7 +184,9 @@ def calculate_additional_metrics(worst_data):
         'setup_time',
         'full_cycle_power',
         'power_delay_product',
-        'energy_delay_product'
+        'energy_delay_product',
+        'metastability_window',
+        'constrained_D_to_Q_delay',
     ]
 
     # Inicializa as novas métricas para evitar KeyError
@@ -197,6 +199,7 @@ def calculate_additional_metrics(worst_data):
         for vt in ['RVT', 'LVT', 'SLVT']:
             for corner in ['FF', 'TT', 'SS']:
                 try:
+                    # TODO : Utilizar as luts originais para calulcar as metricas adicionais e então pegar o maior valor da lut resultante.
                     # Calculate additional metrics
                     metrics['propagation_delay'][vt][corner] = (metrics['cell_rise'][vt][corner] + metrics['cell_fall'][vt][corner]) / 2
                     metrics['output_transition'][vt][corner] = (metrics['rise_transition'][vt][corner] + metrics['fall_transition'][vt][corner]) / 2
@@ -205,89 +208,12 @@ def calculate_additional_metrics(worst_data):
                     metrics['full_cycle_power'][vt][corner] = metrics['fall_power'][vt][corner] + metrics['rise_power'][vt][corner]
                     metrics['power_delay_product'][vt][corner] = ((metrics['fall_power'][vt][corner] + metrics['rise_power'][vt][corner]) / 2) * ((metrics['cell_rise'][vt][corner] + metrics['cell_fall'][vt][corner]) / 2)
                     metrics['energy_delay_product'][vt][corner] = ((metrics['fall_power'][vt][corner] + metrics['rise_power'][vt][corner]) / 2) * ((metrics['cell_rise'][vt][corner] + metrics['cell_fall'][vt][corner]) / 2) ** 2
+                    metrics['metastability_window'][vt][corner] = metrics['setup_time'][vt][corner] + metrics['hold_time'][vt][corner]
+                    metrics['constrained_D_to_Q_delay'][vt][corner] = metrics['propagation_delay'][vt][corner] + metrics['setup_time'][vt][corner]
                 except KeyError as e:
                     print(f"KeyError for {cell_name} at {vt}_{corner}: {e}")
                     continue
     return worst_data
-
-def plot_worst_values_for_vts(worst_data):
-    x_labels = ['RVT_FF', 'RVT_TT', 'RVT_SS', 'LVT_FF', 'LVT_TT', 'LVT_SS', 'SLVT_FF', 'SLVT_TT', 'SLVT_SS']
-    vt_labels = ['RVT', 'LVT', 'SLVT']
-
-    # Dicionário para mapear métricas às suas unidades
-    metric_units = {
-        'fall_power': 'uW/GHz',
-        'rise_power': 'uW/GHz',
-        'cell_fall': 'ps',
-        'cell_rise': 'ps',
-        'fall_transition': 'ps',
-        'rise_transition': 'ps',
-        'hold_rising_fall': 'ps',
-        'hold_rising_rise': 'ps',
-        'setup_rising_fall': 'ps',
-        'setup_rising_rise': 'ps',
-        'leakage_power': 'nW',
-        'propagation_delay': 'ps',
-        'output_transition': 'ps',
-        'hold_time': 'ps',
-        'setup_time': 'ps',
-        'full_cycle_power': 'uW/GHz',
-        'power_delay_product': 'uW*ps/GHz',
-        'energy_delay_product': 'uW*ps²/GHz'
-    }
-
-    additional_metrics = [
-        'propagation_delay',
-        'output_transition',
-        'hold_time',
-        'setup_time',
-        'full_cycle_power',
-        'power_delay_product',
-        'energy_delay_product'
-    ]
-
-    additional_metrics_dir = './additional_metrics_graphs/'
-    if not os.path.exists(additional_metrics_dir):
-        os.makedirs(additional_metrics_dir)
-
-    for key in list(lut_to_indices.keys()) + ['leakage_power'] + additional_metrics:
-        plt.figure(figsize=(12, 8))
-
-        for cell_name, luts in worst_data.items():
-            y_values = []
-            for vt in vt_labels:
-                for corner in ['FF', 'TT', 'SS']:
-                    if key in luts and vt in luts[key] and corner in luts[key][vt]:
-                        y_values.append(luts[key][vt][corner])
-                    else:
-                        y_values.append(float('nan'))
-            
-            # Insert np.nan to break the line between different VTs
-            y_values_with_nan = []
-            x_labels_with_nan = []
-            for i, y in enumerate(y_values):
-                if i % 3 == 0 and i != 0:  # Add np.nan before starting a new VT section
-                    y_values_with_nan.append(np.nan)
-                    x_labels_with_nan.append('RVT_TT')  # Empty string to avoid creating extra space
-                y_values_with_nan.append(y)
-                x_labels_with_nan.append(x_labels[i])
-
-            marker = markers.get(cell_name, 'o')  # Default to circle if marker not found
-            plt.plot(x_labels_with_nan, y_values_with_nan, marker=marker, label=cell_name)
-
-        plt.xlabel('VT_Corner')
-        plt.ylabel(f'{key.replace("_", " ").title()} ({metric_units.get(key, "")})')
-        plt.title(f'{key.replace("_", " ").title()} for VTs and Corners')
-        plt.legend()
-        plt.grid(True)
-        plt.xticks(rotation=45)
-        
-        if key in additional_metrics or key == 'leakage_power':
-            plt.savefig(f'{additional_metrics_dir}/{key}_VT_Corner_worst.png')
-        else:
-            plt.savefig(f'./VT_Corner_graphs/{key}_VT_Corner_worst.png')
-
-        plt.close()
 
 def plot_worst_values_for_vts_subplots(worst_data):
     x_labels = ['FF', 'TT', 'SS']
@@ -295,8 +221,8 @@ def plot_worst_values_for_vts_subplots(worst_data):
 
     # Dicionário para mapear métricas às suas unidades
     metric_units = {
-        'fall_power': 'uW/GHz',
-        'rise_power': 'uW/GHz',
+        'fall_power': 'nW/GHz',
+        'rise_power': 'nW/GHz',
         'cell_fall': 'ps',
         'cell_rise': 'ps',
         'fall_transition': 'ps',
@@ -305,14 +231,16 @@ def plot_worst_values_for_vts_subplots(worst_data):
         'hold_rising_rise': 'ps',
         'setup_rising_fall': 'ps',
         'setup_rising_rise': 'ps',
-        'leakage_power': 'nW',
+        'leakage_power': 'pW',
         'propagation_delay': 'ps',
         'output_transition': 'ps',
         'hold_time': 'ps',
         'setup_time': 'ps',
-        'full_cycle_power': 'uW/GHz',
-        'power_delay_product': 'uW*ps/GHz',
-        'energy_delay_product': 'uW*ps²/GHz'
+        'full_cycle_power': 'nW/GHz',
+        'power_delay_product': 'nW*ps/GHz',
+        'energy_delay_product': 'nW*ps²/GHz',
+        'metastability_window': 'ps',
+        'constrained_D_to_Q_delay': 'ps',
     }
 
     additional_metrics = [
@@ -322,7 +250,9 @@ def plot_worst_values_for_vts_subplots(worst_data):
         'setup_time',
         'full_cycle_power',
         'power_delay_product',
-        'energy_delay_product'
+        'energy_delay_product', 
+        'metastability_window',
+        'constrained_D_to_Q_delay',
     ]
 
     additional_metrics_dir = './additional_metrics_graphs/'
@@ -339,7 +269,7 @@ def plot_worst_values_for_vts_subplots(worst_data):
                 y_values = []
                 for corner in x_labels:
                     if key in luts and vt in luts[key] and corner in luts[key][vt]:
-                        y_values.append(luts[key][vt][corner])
+                        y_values.append(luts[key][vt][corner] * 1000) # The lib is in uW, so we convert to nW
                     else:
                         y_values.append(float('nan'))
                 
