@@ -4,14 +4,15 @@ import numpy as np
 
 # Dados fornecidos
 flip_flops = {
-    "C2MOS_DYN": 145800,
-    "C2MOS_DYN_M1": 160380,
+    # "C2MOS_DYN": 145800,
+    # "C2MOS_DYN_M1": 160380,
     "TSPC": 145800,
     "TSPC_M1": 174960,
     "TGFF_DYN": 218700,
-    "mC2MOS": 262440,
     "PowerPC": 262440,
+    "mC2MOS": 262440,
     "mC2MOS_ASAP7": 291600,
+    "C2MOS": 306180,
 }
 
 # Converta os dados para um DataFrame
@@ -30,7 +31,7 @@ def plot_flip_flop_areas(dataframe, y_spacing):
     plt.grid(axis='y', linestyle='--', alpha=0.7)
     plt.xticks(rotation=45)
     plt.tight_layout()
-    plt.savefig('./area_plot/area_comparison.png')
+    plt.savefig('./plots/area_plot/area_comparison.png')
 
 # Plotar o gráfico com espaçamento de 145.8 (10³ nm²)
 plot_flip_flop_areas(df, 14.58)
