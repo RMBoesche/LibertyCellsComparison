@@ -225,7 +225,7 @@ def calculate_lut_values(all_lut_info):
                         lut_values = np.array(lut['values'], dtype=float)
                         if key in average_metric:
                             if lut_values.shape != (1,1):
-                                target_value = np.average(lut_values[:, 1])
+                                target_value = np.average(lut_values[:, 2])
                             else:
                                 target_value = np.nan
                         elif key in worst_metric:
@@ -270,15 +270,15 @@ def calculate_additional_metrics(all_lut_info, plot_data):
             try:
                 lut_rise = np.array(luts['cell_rise'][0]['values'], dtype=float)
                 lut_fall = np.array(luts['cell_fall'][0]['values'], dtype=float)
-                lut_rise_column = lut_rise[:, 1]
-                lut_fall_column = lut_fall[:, 1]
+                lut_rise_column = lut_rise[:, 2]
+                lut_fall_column = lut_fall[:, 2]
                 average_rise_fall = (lut_rise_column + lut_fall_column) / 2.0
                 propagation_delay = np.average(average_rise_fall)
 
                 lut_rise_trans = np.array(luts['output_rise_transition'][0]['values'], dtype=float)
                 lut_fall_trans = np.array(luts['output_fall_transition'][0]['values'], dtype=float)
-                lut_rise_trans_column = lut_rise_trans[:, 1]
-                lut_fall_trans_column = lut_fall_trans[:, 1]
+                lut_rise_trans_column = lut_rise_trans[:, 2]
+                lut_fall_trans_column = lut_fall_trans[:, 2]
                 average_rise_fall_trans = (lut_rise_trans_column + lut_fall_trans_column) / 2.0
                 output_transition = np.average(average_rise_fall_trans)
 
@@ -293,8 +293,8 @@ def calculate_additional_metrics(all_lut_info, plot_data):
                 # Calculate full cycle power
                 lut_fall_power = np.array(luts['fall_power'][0]['values'], dtype=float) 
                 lut_rise_power = np.array(luts['rise_power'][2]['values'], dtype=float)
-                lut_fall_power_column = lut_fall_power[:, 1]
-                lut_rise_power_column = lut_rise_power[:, 1]
+                lut_fall_power_column = lut_fall_power[:, 2]
+                lut_rise_power_column = lut_rise_power[:, 2]
                 sum_fall_rise_power = lut_fall_power_column + lut_rise_power_column
                 average_fall_rise_power = (lut_fall_power_column + lut_rise_power_column) / 2.0
                 full_cycle_power = np.average(sum_fall_rise_power)
@@ -354,14 +354,15 @@ def plot_vts_subplots(plot_data):
             for cell_name, luts in plot_data.items():
                 if key == 'metastability_window' and cell_name == 'TGFF_DYN':
                     continue
-                y_values = []
+                y_values_list = []
                 for corner in x_labels:
                     if key in luts and vt in luts[key] and corner in luts[key][vt]:
-                        y_values.append(luts[key][vt][corner])
+                        y_values_list.append(luts[key][vt][corner])
                     else:
-                        y_values.append(float('nan'))
+                        y_values_list.append(float('nan'))
                 
                 marker = markers.get(cell_name, 'o')  # Default to circle if marker not found
+                y_values = np.array(y_values_list, dtype=float)
                 ax.plot(x_labels, y_values, marker=marker, label=cell_name)
 
             ax.set_title(vt)
@@ -381,10 +382,10 @@ def plot_individual_luts(all_lut_info):
             for key, luts in lut_info.items():
                 if key == 'leakage_power':
                     continue
-                # if cell_name != 'C2MOS':
-                #     continue
-                # if file_name != 'RVT_TT.lib':
-                #     continue
+                if cell_name != 'C2MOS':
+                    continue
+                if file_name != 'RVT_TT.lib':
+                    continue
 
                 file_name_path = file_name.split('.')[0]
                 individual_graphs_dir = f'./plots/individual_graphs/{file_name_path}/{cell_name}/'
@@ -408,12 +409,14 @@ def plot_individual_luts(all_lut_info):
                         else:
                             print(f"Skipping plot for {key} in {cell_name} due to dimension mismatch: len(index_1)={len(index_1)} len(row_values)={len(row_values)} row_values={row_values}")
                 
-                # plt.xscale('log')
+                # Ensure x-axis ticks are displayed
+                plt.xticks(index_1, labels=[f'{x:.2f}' for x in index_1], rotation=45)
                 plt.xlabel(index_1_name + f' ({metric_units.get(index_1_label, "")})')
                 plt.ylabel(f'{key.replace("_", " ").title()} ({metric_units.get(key, "")})')
                 plt.title(f'{cell_name} - {key.replace("_", " ").title()} vs {index_1_name}')
                 plt.legend(title=index_2_name)
                 plt.grid(True)
+                plt.tight_layout()  # Adjust layout to ensure everything fits
                 plt.savefig(f'{individual_graphs_dir}/{key}_{index_1_label}.png')  # Save the plot as a PNG file
                 plt.close()
 
@@ -431,12 +434,14 @@ def plot_individual_luts(all_lut_info):
                         else:
                             print(f"Skipping plot for {key} in {cell_name} due to dimension mismatch: len(index_2)={len(index_2)} len(col_values)={len(col_values)} col_values={col_values}")
                 
-                # plt.xscale('log')
+                # Ensure x-axis ticks are displayed
+                plt.xticks(index_2, labels=[f'{x:.2f}' for x in index_2], rotation=45)
                 plt.xlabel(index_2_name + f' ({metric_units.get(index_2_label, "")})')
                 plt.ylabel(f'{key.replace("_", " ").title()} ({metric_units.get(key, "")})')
                 plt.title(f'{cell_name} - {key.replace("_", " ").title()} vs {index_2_name}')
                 plt.legend(title=index_1_name)
                 plt.grid(True)
+                plt.tight_layout()  # Adjust layout to ensure everything fits
                 plt.savefig(f'{individual_graphs_dir}/{key}_{index_2_label}.png')  # Save the plot as a PNG file
                 plt.close()
 
@@ -449,8 +454,8 @@ plot_data = calculate_lut_values(all_lut_info)
 
 plot_individual_luts(all_lut_info)
 
-plot_data = calculate_additional_metrics(all_lut_info, plot_data)
+# plot_data = calculate_additional_metrics(all_lut_info, plot_data)
 
-plot_vts_subplots(plot_data)
+# plot_vts_subplots(plot_data)
 
 
